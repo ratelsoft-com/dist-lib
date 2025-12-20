@@ -25,7 +25,7 @@ dotnet add package Ratel.Vision
 또는 Visual Studio의 패키지 관리자 콘솔에서:
 
 ```powershell
-Install-Package Ratel.Vision
+Install-Package RatelSoft.Vision
 ```
 
 ### 요구 사항
