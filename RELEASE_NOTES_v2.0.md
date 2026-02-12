@@ -78,6 +78,21 @@
   - 개발 문서:
     - `../RatelLib/RatelSoft.Lib/docs/SCRIPT_JS_ENGINE_IMPLEMENTATION.md`
     - `../RatelLib/RatelSoft.Utils.Wpf/docs/SCRIPT_CONSOLE_LANGUAGE_MODE.md`
+- 안정화 수정:
+  - Script Console 초기화 중 `Lang` 콤보 `SelectionChanged` 선호출 시 발생 가능한
+    `NullReferenceException` 가드 추가
+  - `../RatelLib/RatelSoft.Utils.Wpf/Script/ScriptConsoleWindow.xaml.cs`
+  - 상태머신 기반 수명주기 관리 추가:
+    - `ScriptConsoleUiState` (`None/Initializing/Ready/Running/Closing/Closed`)
+    - UI 이벤트/실행 동작을 상태 기반으로 가드
+    - 실행 모니터 기반 `Ready/Running` 상태 자동 전이
+
+### UI Window 상태머신 공통 지침 추가 (2026-02-12)
+
+- 다른 프로젝트에서도 재사용 가능한 UI 수명주기 공통 지침을 정의
+- 에이전트 운영 지침(`../RatelLib/AGENTS.md`)에 Window 상태머신 패턴 공통 규칙 추가
+- 개발 가이드 문서 추가:
+  - `../RatelLib/RatelSoft.Utils.Wpf/docs/WINDOW_LIFECYCLE_STATE_GUIDELINE.md`
 
 ### UnifiedMotion 독립성 정리 (2026-02-12)
 
