@@ -46,6 +46,14 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### UnifiedMotion 독립성 정리 (2026-02-12)
+
+- `RatelSoft.Utils.UnifiedMotion/UnifiedMotion/UnifiedMotion.csproj`에서 불필요한 프로젝트 참조 제거
+  - 제거: `RatelSoft.Utils.UnifiedIO`, `RatelSoft.Utils.UnifiedCamera`
+  - 유지: `RatelSoft.Common`
+- `dist-lib/README.md`의 라이브러리 의존 관계 설명을 실제 구조와 동일하게 수정
+  - `RatelSoft.Utils.UnifiedMotion -> RatelSoft.Common`
+
 ### 배포/문서 운영 정리 (2026-02-12)
 
 - `dist-lib` 저장소를 서브모듈로 등록
