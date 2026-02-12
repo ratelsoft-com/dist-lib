@@ -46,6 +46,39 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### ScriptV3 언어 방향 정리 (2026-02-12)
+
+- ScriptV3 장기 방향을 "자체 DSL 확장"에서 "JavaScript 표준 문법 + Host API"로 정리
+- 권장 엔진으로 `Jint` 채택 방향 문서화
+- 사용자 문서 추가:
+  - `docs/SCRIPT_V3_LANGUAGE_DIRECTION.md`
+- 개발자 설계 문서 추가:
+  - `../RatelLib/RatelSoft.Lib/docs/SCRIPT_V3_JS_ENGINE_DESIGN.md`
+- 배포 포털 문서 링크 추가:
+  - `README.md`의 문서 목록에 Script 언어 방향 문서 연결
+
+### Script Console JavaScript 실행 모드 추가 (2026-02-12)
+
+- 기존 ScriptV3는 유지하고, JavaScript 실행 경로를 신규 추가
+- `RatelSoft.Lib`에 JS 엔진 추가 (`Jint` + `Esprima`)
+  - `../RatelLib/RatelSoft.Lib/FlowScenario/ScriptJs/ScriptJsEngine.cs`
+  - `../RatelLib/RatelSoft.Lib/FlowScenario/ScriptJs/ScriptJsHostApi.cs`
+  - `../RatelLib/RatelSoft.Lib/FlowScenario/ScriptJs/ScriptJsPrimitives.cs`
+- `ScriptConsoleWindow`를 공용 확장
+  - 하단 `Lang` 선택(`ScriptV3` / `JavaScript`)
+  - `.scr`, `.js` 로드/저장/목록/실행/중지 분기 지원
+  - JS 모드에서는 Debug Step 비활성(런 모드만 지원)
+- `RatelWPF` 호스트 등록 추가
+  - `../RatelLib/RatelWPF/Run/ScriptJsHostFunctionRegistrar.cs`
+  - 기존 모션/IO 함수들을 JS Host API에도 등록
+- 예제/문서 추가
+  - `../RatelLib/RatelWPF/Scripts/javascript_basic.js`
+  - `../RatelLib/RatelWPF/Scripts/mainscr.js` (`mainscr.scr` 변환본)
+  - `docs/SCRIPT_JS_QUICKSTART.md`
+  - 개발 문서:
+    - `../RatelLib/RatelSoft.Lib/docs/SCRIPT_JS_ENGINE_IMPLEMENTATION.md`
+    - `../RatelLib/RatelSoft.Utils.Wpf/docs/SCRIPT_CONSOLE_LANGUAGE_MODE.md`
+
 ### UnifiedMotion 독립성 정리 (2026-02-12)
 
 - `RatelSoft.Utils.UnifiedMotion/UnifiedMotion/UnifiedMotion.csproj`에서 불필요한 프로젝트 참조 제거

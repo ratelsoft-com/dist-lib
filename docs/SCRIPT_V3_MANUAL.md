@@ -5,6 +5,9 @@ Script v3는 ANTLR 기반 문법으로 `import`, `func`, `call`, `run`, `run_onc
 
 실행 창: `RatelWPF > File > Script Console`
 
+참고: Script Console은 `Lang = JavaScript` 모드도 지원합니다.
+- JS 가이드는 `SCRIPT_JS_QUICKSTART.md`를 참고하세요.
+
 ---
 
 ## 목차
