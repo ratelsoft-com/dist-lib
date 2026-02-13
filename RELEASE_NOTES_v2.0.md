@@ -53,6 +53,7 @@
   - 버전 규칙 `2.yy.mmdd.build`로 적용 (`VersionPrefix`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`)
   - 동일 날짜 기존 패키지/버전을 검사해 build 번호 자동 증가
   - 로컬 푸시(`C:\data\nuget`) 시 기존 동일 패키지 파일 정리 후 푸시하도록 보완
+  - 버전 갱신된 `csproj`를 패키징 성공 후 저장소별 자동 `commit`/`push` 하도록 보완(옵션: `--no-git-commit`, `--no-git-push`)
   - 옵션 추가:
     - `--no-version-update` (버전 자동 갱신 비활성화)
     - `--keep-local-old` (로컬 피드 기존 패키지 유지)
