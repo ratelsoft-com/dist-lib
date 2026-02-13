@@ -46,6 +46,22 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### NuGet 패키징/업로드 스크립트 경로 및 버전 갱신 보완 (2026-02-13)
+
+- `nugetpack.py` 개선:
+  - 설정된 프로젝트들의 버전 필드 자동 갱신 추가
+  - 버전 규칙 `2.yy.mmdd.build`로 적용 (`VersionPrefix`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`)
+  - 동일 날짜 기존 패키지/버전을 검사해 build 번호 자동 증가
+  - 로컬 푸시(`C:\data\nuget`) 시 기존 동일 패키지 파일 정리 후 푸시하도록 보완
+  - 옵션 추가:
+    - `--no-version-update` (버전 자동 갱신 비활성화)
+    - `--keep-local-old` (로컬 피드 기존 패키지 유지)
+- `upload_ratelsoft_packages.py` 개선:
+  - 기본 탐색 경로를 `../RatelLib/artifacts/nupkg` 기준으로 고정
+  - 기본 패턴을 `RatelSoft.*.nupkg`로 조정
+  - `--package-dir` 옵션 추가
+  - API 키 하드코딩 제거, 환경변수(`GITHUB_PACKAGES_TOKEN` 또는 `GITHUB_TOKEN`) 사용
+
 ### Script JS async 재현/안정화 (2026-02-13)
 
 - 사용자 보고 이슈 수정:
