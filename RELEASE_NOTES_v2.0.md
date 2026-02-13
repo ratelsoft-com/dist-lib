@@ -46,6 +46,25 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### Script JS async 재현/안정화 (2026-02-13)
+
+- 사용자 보고 이슈 수정:
+  - 증상: `async_examples.js` 실행 시 `--- 1. 기본 spawnFunc/await ---` 이후 정지/실패
+  - 원인1: 백그라운드 작업이 매우 빠르게 완료되면 핸들이 즉시 정리되어
+    `await(handle)`에서 `Task handle not found` 발생
+  - 원인2: `spawnFunc`의 함수 객체 문자열화 결과가 `[native code]`인 경우
+    wrapper 파싱 실패(`Unexpected identifier`)
+- 조치:
+  - 완료된 백그라운드 핸들 저장소 추가(`_completed`, 기본 512개 유지)로 `await` 유실 방지
+  - `spawnFunc("functionName", ...args)` 경로를 파일 함수 추출 방식으로 안정화
+  - `spawnFunc` wrapper 사전 파싱/오류 상세화로 문제 원인 즉시 노출
+  - `spawnFunc` 실행 결과를 `await`로 받을 수 있도록 내부 결과 슬롯(`__ratel_internal_result__`) 적용
+  - 백그라운드 task fault 시 `[JS:ERROR]` 로그 강화
+- 재현/검증 도구 추가:
+  - `../RatelLib/tools/ScriptJsRepro/ScriptJsRepro.csproj`
+  - `dotnet run --project ../RatelLib/tools/ScriptJsRepro/ScriptJsRepro.csproj -- minimal`
+  - `dotnet run --project ../RatelLib/tools/ScriptJsRepro/ScriptJsRepro.csproj -- file ../RatelLib/RatelWPF/Scripts/async_examples.js`
+
 ### ScriptV3 언어 방향 정리 (2026-02-12)
 
 - ScriptV3 장기 방향을 "자체 DSL 확장"에서 "JavaScript 표준 문법 + Host API"로 정리
@@ -86,6 +105,28 @@
     - `ScriptConsoleUiState` (`None/Initializing/Ready/Running/Closing/Closed`)
     - UI 이벤트/실행 동작을 상태 기반으로 가드
     - 실행 모니터 기반 `Ready/Running` 상태 자동 전이
+  - 공용변수 연동 추가:
+    - JS Host API `ratel.getVar`, `ratel.setVar`, `ratel.hasVar`
+    - 저장소: `VariableManager` (`RatelLib.Variables`) 공유
+    - 배열 지원: JS Array <-> `List<object>` (중첩 배열 포함)
+  - async API 확장:
+    - `ratel.spawn(path)` (run alias)
+    - `ratel.spawnFunc(fnOrName, ...args)` (single-file 함수 비동기 실행)
+    - `ratel.await(handle)` (awaitResult alias)
+    - `ratel.isRunning(handle)`, `ratel.runOnce`, `ratel.runOnceStop`
+  - async 예제 JS 변환:
+    - `../RatelLib/RatelWPF/Scripts/async_examples.js`
+    - worker 스크립트 추가:
+      - `async_worker_basic.js`
+      - `async_worker_task_a.js`
+      - `async_worker_task_b.js`
+      - `async_worker_long.js`
+      - `async_worker_periodic.js`
+      - `async_worker_producer.js`
+      - `async_worker_consumer.js`
+  - 안정화:
+    - `spawnFunc` 인자 전달 방식을 `apply(__spawn_args)`에서 JS literal 직주입으로 변경
+    - `async_examples.js`는 함수명 문자열 기반 `spawnFunc("fnName", ...)` 패턴으로 정리
 
 ### UI Window 상태머신 공통 지침 추가 (2026-02-12)
 
