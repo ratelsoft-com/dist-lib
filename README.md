@@ -86,6 +86,7 @@ RatelSoft.Types
 - Script v3 매뉴얼: [`docs/SCRIPT_V3_MANUAL.md`](./docs/SCRIPT_V3_MANUAL.md)
 - Script 언어 방향(JS 전환): [`docs/SCRIPT_V3_LANGUAGE_DIRECTION.md`](./docs/SCRIPT_V3_LANGUAGE_DIRECTION.md)
 - Script JS 빠른 시작: [`docs/SCRIPT_JS_QUICKSTART.md`](./docs/SCRIPT_JS_QUICKSTART.md)
+- Unified 사용자 디바이스 확장 가이드: [`docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`](./docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md)
 - 통합 코드북: [`docs/RatelSoft_CODEBOOK.md`](./docs/RatelSoft_CODEBOOK.md)
 - RatelViewer 코드북: [`docs/RatelSoft_CODEBOOK_RatelViewer.md`](./docs/RatelSoft_CODEBOOK_RatelViewer.md)
 - EsViewer 실전 코드북: [`docs/RatelSoft_CODEBOOK_EsViewer_PRACTICAL.md`](./docs/RatelSoft_CODEBOOK_EsViewer_PRACTICAL.md)

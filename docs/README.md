@@ -4,6 +4,9 @@
 
 Ratel Library는 산업용 검사 및 제어 장비 개발을 위한 통합 라이브러리입니다. 특히 **Ratel.Vision**은 이미지 기반 품질 검사를 위한 고성능 얼룩(Mura) 검출 알고리즘을 제공합니다.
 
+관련 가이드:
+- Unified 사용자 디바이스 확장 가이드: [`UNIFIED_CUSTOM_DEVICE_GUIDE.md`](./UNIFIED_CUSTOM_DEVICE_GUIDE.md)
+
 ### 주요 특징
 
 - **고성능 이미지 검사**: CPU/GPU 가속을 통한 대용량 이미지 실시간 처리
