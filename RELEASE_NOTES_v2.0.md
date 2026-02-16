@@ -492,3 +492,9 @@
 | 2026-01-10 | c63dccb | Auth 관련 수정 + 패키징 스크립트 개선 |
 
 
+
+### 2026-02-16 (문서)
+- `docs/IO_RUNTIME_MANUAL.md` 추가
+  - `RatelWPF` 실코드 기준 IO 런타임(`IIoRuntime`)과 UI 어댑터(`IoViewManager`) 분리 사용 가이드
+- `docs/MOTION_RUNTIME_MANUAL.md` 추가
+  - `RatelWPF` 실코드 기준 Motion 런타임(`IMotionRuntime`)과 UI 어댑터(`MotionViewManager`) 분리 사용 가이드
