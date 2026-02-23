@@ -131,6 +131,37 @@ MotionControllerTypeRegistry.Register(
 var controller = MotionControllerFactory.Create("mycompany.motion.custom", index: 0);
 ```
 
+### 3-3. MotionManager가 관리하는 Controller에서 전용 함수 호출
+
+`UnifiedMotion`에서는 컨트롤러 인스턴스를 `MotionManager`가 관리하므로,
+가능하면 외부에서 별도 인스턴스를 따로 운용하지 말고 `motion[axisNo].Controller` 경유로 접근하는 것을 권장합니다.
+
+```csharp
+using RatelSoft.Utils.UnifiedMotion;
+
+public interface IMyMotionFeature
+{
+    string Func1();
+}
+
+public sealed class MyMotionController : VController, IMyMotionFeature
+{
+    public MyMotionController(int index, int maxMotorCount = 32) : base(index, maxMotorCount) { }
+
+    public string Func1() => $"Func1 called. Index={Index}";
+}
+
+// 축 등록 이후
+if (motion[0].Controller is IMyMotionFeature feature)
+{
+    var result = feature.Func1();
+}
+```
+
+참고:
+- `MotionAxis.Controller`는 조회(`get`)만 외부 공개되고, 설정(`set`)은 런타임 내부(`internal`)에서만 수행됩니다.
+- 따라서 호출자는 컨트롤러 소유권/수명주기를 건드리지 않고, 전용 기능만 안전하게 확장해서 사용할 수 있습니다.
+
 ## 4) 운영 권장사항
 
 - `kind` 네이밍은 회사/제품 prefix를 붙이세요.

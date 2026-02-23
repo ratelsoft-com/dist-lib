@@ -498,3 +498,9 @@
   - `RatelWPF` 실코드 기준 IO 런타임(`IIoRuntime`)과 UI 어댑터(`IoViewManager`) 분리 사용 가이드
 - `docs/MOTION_RUNTIME_MANUAL.md` 추가
   - `RatelWPF` 실코드 기준 Motion 런타임(`IMotionRuntime`)과 UI 어댑터(`MotionViewManager`) 분리 사용 가이드
+
+### 2026-02-23 (문서)
+- `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md` 업데이트
+  - UnifiedMotion 확장 시 컨트롤러 전용 함수 호출 패턴 추가
+  - 권장 방식: `motion[axisNo].Controller`에서 인터페이스 캐스팅 후 호출
+  - `MotionAxis.Controller` 공개 범위 설명 추가(`public get; internal set;`)
