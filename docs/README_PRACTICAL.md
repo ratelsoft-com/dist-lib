@@ -267,16 +267,10 @@ viewer.MoveToToolBars(hostToolBarTray, startBand: 0);
 - `WPFLogViewer` -> `RatelLogViewer`
 - `RatelLib.Log` -> `AppLog.Log`
 
-## 10) 자동 생성 문서 폴더 처리
+## 10) 문서 운영 기준
 
-`RatelSoft.Common` buildTransitive로 생성될 수 있는 폴더:
-- `RatelSoftDocs`
-
-`.gitignore`:
-
-```gitignore
-EsViewer/RatelSoftDocs/
-```
+- 사용자 프로젝트로 문서를 복사하는 `RatelSoftDocs` 자동 생성은 기본 비활성입니다.
+- 공식 문서 원본은 `dist-lib/docs` 단일 경로로 관리합니다.
 
 ## 11) 검증 명령
 

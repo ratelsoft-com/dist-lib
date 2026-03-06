@@ -46,6 +46,21 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### 문서 단일화 및 소비자 프로젝트 문서 복사 기본 비활성 (2026-03-06)
+
+- 문서 운영 기준을 `dist-lib/docs` 단일 원본으로 정리.
+- `RatelSoft.Common`의 buildTransitive 문서 복사 기본값을 `false`로 변경:
+  - `RatelSoft.Common/src/RatelSoft.Common/RatelSoft.Common.targets`
+- `RatelSoft.Common` NuGet 패키지에서 문서 파일 자동 포함 제거:
+  - `RatelSoft.Common/src/RatelSoft.Common/RatelSoft.Common.csproj`
+  - `PackageReadmeFile` 제거
+  - `..\..\docs\*.md` pack 제거
+- 사용자 문서 반영:
+  - `RatelLib/README.md`의 실전 체크리스트 문구를 새 정책에 맞게 수정
+  - `docs/README_PRACTICAL.md`의 `RatelSoftDocs` 자동 생성 안내를 정책 설명으로 교체
+- 패키지 버전 갱신:
+  - `RatelSoft.*` 핵심 패키지 버전을 `2.26.0306.1`로 업데이트
+
 ### NuGet 패키징/업로드 스크립트 경로 및 버전 갱신 보완 (2026-02-13)
 
 - `nugetpack.py` 개선:
