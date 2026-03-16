@@ -46,6 +46,21 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### RatelViewer 편집용 요소 최대 개수 제한 추가 (2026-03-16)
+
+- `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml.cs`
+  - 편집용 `Shape`/`FrameworkElement` 추가 시 최대 개수를 제한하는 `MaxElementCount` 속성 추가(기본값: `1000`).
+  - 최대 개수 초과 시 신규 요소 추가를 중단하고, 에러 로그는 viewer 인스턴스당 한 번만 남기도록 보완.
+
+### IPWindow에 RatelViewerEx 10,000 Rect 성능 테스트 메뉴 추가 (2026-03-16)
+
+- `RatelWPF/IPWindow.xaml`, `RatelWPF/IPWindow.xaml.cs`
+  - 테스트 뷰어를 `RatelViewerEx`로 전환.
+  - `Add Rects Test`: 기존 `Shape` 기반 `AddRectangle(...)`로 10,000개 rect 추가.
+  - `Regist Rects Test`: `SetDefects(...)`로 10,000개 overlay rect 등록.
+  - `Clear Rects`: shape/overlay 테스트 rect 일괄 제거.
+  - 두 방식의 등록 시간을 로그로 비교할 수 있도록 보강.
+
 ### RatelViewerEx 추가: ROI 편집 + Defect Overlay/Hittest 분리 (2026-03-16)
 
 - `RatelSoft.Vision.Wpf/WPF/RatelViewerEx.cs` 추가:
