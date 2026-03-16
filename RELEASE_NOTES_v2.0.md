@@ -46,6 +46,15 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### RatelViewerEx 추가: ROI 편집 + Defect Overlay/Hittest 분리 (2026-03-16)
+
+- `RatelSoft.Vision.Wpf/WPF/RatelViewerEx.cs` 추가:
+  - 기존 `RatelViewer`를 상속해 toolbar/menu/profile/histogram 기능을 유지하면서 defect overlay 기능을 확장하는 컨트롤 추가.
+  - ROI는 기존 `Shape` 편집 모델을 유지하고, defect는 render-only overlay 레이어로 별도 관리.
+- `RatelSoft.Vision.Wpf/WPF/Overlay/*` 추가:
+  - `DefectOverlayItem`, `DefectShapeType`, `DefectOverlayLayer`, `DefectSpatialIndex`, `DefectHitTestResult` 등 defect 표시/선택용 보조 타입 추가.
+  - 대량 defect 표시를 위해 drawing 기반 렌더링과 간단한 spatial index hit test를 제공.
+
 ### LogViewer 클립보드 예외 완화 및 RatelViewer Mat 스레드 접근 보완 (2026-03-16)
 
 - `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`

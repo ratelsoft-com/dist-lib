@@ -284,6 +284,7 @@ rg -n "Ratel\.Vision|Ratel\.WPF|RatelLib\.Log|WPFLogViewer" EsViewer --glob "*.c
 - `README.md`
 - `Docs/RatelSoft_CODEBOOK.md`
 - `Docs/RatelSoft_CODEBOOK_RatelViewer.md`
+- `Docs/RatelSoft_CODEBOOK_RatelViewerEx.md`
 - `Docs/RatelSoft_CODEBOOK_EsViewer_PRACTICAL.md`
 - `Docs/RatelSoft_AI_CONSUMER_GUIDE.md`
 - `Docs/RatelSoft_TYPE_INDEX.md`

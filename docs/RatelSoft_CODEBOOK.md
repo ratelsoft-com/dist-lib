@@ -5,6 +5,7 @@
 ## 0) 타입 이름으로 바로 찾기 (가장 먼저)
 - 타입 역인덱스: `Docs/RatelSoft_TYPE_INDEX.md`
 - RatelViewer 전용 코드북: `Docs/RatelSoft_CODEBOOK_RatelViewer.md`
+- RatelViewerEx 전용 코드북: `Docs/RatelSoft_CODEBOOK_RatelViewerEx.md`
 - 실전 마이그레이션 예제: `Docs/RatelSoft_CODEBOOK_EsViewer_PRACTICAL.md`
 - XML 레퍼런스 가이드: `Docs/RatelSoft_XML_REFERENCE_MANUAL.md`
 - 예시: `CalcTextBox` 검색
