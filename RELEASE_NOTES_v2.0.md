@@ -46,6 +46,15 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### LogViewer 클립보드 예외 완화 및 RatelViewer Mat 스레드 접근 보완 (2026-03-16)
+
+- `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
+  - 로그 복사(`Ctrl+C`) 시 클립보드가 다른 프로세스에 의해 잠겨 있으면 발생하던 `COMException (0x800401D0)`를 재시도 후 경고 로그만 남기고 종료하도록 변경.
+  - 클립보드 일시 점유 상황에서 프로세스가 종료되지 않도록 보완.
+- `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml.cs`
+  - `RatelViewer.Mat` setter가 백그라운드 스레드에서 호출되더라도 내부적으로 UI `Dispatcher`를 통해 `MatProperty`를 갱신하도록 변경.
+  - `viewer.Mat = ...` 직접 할당 및 바인딩 갱신 시 발생할 수 있는 WPF 스레드 접근 예외를 완화.
+
 ### 문서 단일화 및 소비자 프로젝트 문서 복사 기본 비활성 (2026-03-06)
 
 - 문서 운영 기준을 `dist-lib/docs` 단일 원본으로 정리.
