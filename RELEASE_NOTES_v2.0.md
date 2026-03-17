@@ -46,6 +46,20 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### RatelViewerEx 선택 스타일/XAML 테스트 및 Polygon Defect 샘플 보강 (2026-03-18)
+
+- `RatelWPF/IPWindow.xaml`, `RatelWPF/IPWindow.xaml.cs`
+  - `RatelViewerEx`의 `SelectedDefectStroke`, `SelectedDefectFill`, `SelectedDefectThicknessDelta`를 XAML에서 직접 테스트할 수 있도록 샘플 설정 추가.
+  - `DefectClicked` 로그를 추가해 선택된 defect의 ID/형상/영역을 확인할 수 있도록 보강.
+  - `Regist Rects Test`는 100,000개의 overlay 오각형(`Polygon`)을 등록하도록 변경해 polygon 렌더링과 hit test를 함께 검증 가능하게 수정.
+
+### RatelViewerEx 선택 Defect 스타일 외부 설정 지원 (2026-03-18)
+
+- `RatelSoft.Vision.Wpf/WPF/RatelViewerEx.cs`
+- `RatelSoft.Vision.Wpf/WPF/Overlay/DefectOverlayLayer.cs`
+  - 선택된 defect의 표시 스타일을 외부에서 설정할 수 있도록 `SelectedDefectStroke`, `SelectedDefectFill`, `SelectedDefectThicknessDelta` 속성 추가.
+  - XAML/코드에서 선택 강조 색상과 두께를 조정하면 overlay가 즉시 다시 렌더링되도록 보강.
+
 ### RatelViewer 편집용 요소 최대 개수 제한 추가 (2026-03-16)
 
 - `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml.cs`

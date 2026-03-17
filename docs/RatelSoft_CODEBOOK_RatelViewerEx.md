@@ -124,7 +124,56 @@ ID로 선택:
 viewer.SelectDefect("D-002");
 ```
 
-## 6) ROI와 Defect 역할 분리
+## 6) 선택된 Defect 스타일 설정
+
+선택 강조 스타일은 외부에서 설정할 수 있다.
+
+- `SelectedDefectStroke`
+- `SelectedDefectFill`
+- `SelectedDefectThicknessDelta`
+
+코드 설정:
+
+```csharp
+viewer.SelectedDefectStroke = Brushes.Cyan;
+viewer.SelectedDefectFill = new SolidColorBrush(Color.FromArgb(64, 0, 255, 255));
+viewer.SelectedDefectThicknessDelta = 3;
+```
+
+XAML 설정:
+
+```xml
+<vision:RatelViewerEx x:Name="viewer"
+                      SelectedDefectStroke="Cyan"
+                      SelectedDefectThicknessDelta="3">
+    <vision:RatelViewerEx.SelectedDefectFill>
+        <SolidColorBrush Color="#4000FFFF" />
+    </vision:RatelViewerEx.SelectedDefectFill>
+</vision:RatelViewerEx>
+```
+
+개별 defect의 기본 표시 스타일은 `DefectOverlayItem`에서 설정한다.
+
+```csharp
+var item = new DefectOverlayItem
+{
+    Id = "D-003",
+    ShapeType = DefectShapeType.Rectangle,
+    Bounds = new Rect(200, 120, 30, 18),
+    Stroke = Brushes.Yellow,
+    Fill = new SolidColorBrush(Color.FromArgb(32, 255, 255, 0)),
+    Thickness = 1,
+};
+```
+
+즉,
+
+- 평상시 스타일: `DefectOverlayItem`
+- 선택 강조 스타일: `RatelViewerEx`
+
+로 나눠서 설정하면 된다.
+
+## 7) ROI와 Defect 역할 분리
 
 권장 패턴:
 
@@ -147,7 +196,7 @@ viewer.AddRectangle(roi, new Rect(50, 50, 200, 120));
 
 로 나눠서 쓴다.
 
-## 7) 메뉴/툴바/Profile/Histogram
+## 8) 메뉴/툴바/Profile/Histogram
 
 `RatelViewerEx`는 `RatelViewer`를 상속하므로 기존 기능을 그대로 사용한다.
 
@@ -161,7 +210,7 @@ viewer.AddRectangle(roi, new Rect(50, 50, 200, 120));
 
 기존 `RatelViewer`에서 쓰던 `profileMenu`, `showHistogramMenu`, `MoveToToolBars(...)` 같은 패턴도 동일하게 적용 가능하다.
 
-## 8) 소비자 변경 범위
+## 9) 소비자 변경 범위
 
 기존 `RatelViewer`에서 `RatelViewerEx`로 바꿀 때 보통 바뀌는 부분은 아래뿐이다.
 
@@ -198,7 +247,7 @@ viewer.SetDefects(defects);
 
 ROI 편집 코드는 대부분 그대로 유지할 수 있다.
 
-## 9) 주의
+## 10) 주의
 
 - defect는 `Shape` 컬렉션에 들어가지 않는다.
 - defect는 표시/선택 중심이다.
