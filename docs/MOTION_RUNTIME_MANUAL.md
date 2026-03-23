@@ -103,14 +103,134 @@ Console.WriteLine($"{axis.AxisName} pos={axis.CurrentPos:F3}, moving={axis.IsMov
 핵심:
 - 스크립트는 `MotionViewManager`가 아니라 `IMotionRuntime`를 직접 사용한다.
 
-## 7. 단일 축 클래스 정책
+## 7. 장비 전용 기능 확장 패턴
+
+기본 `UnifiedMotion` API는 공통 모션 기능만 제공합니다.
+현장에서는 여기에 컨트롤러 전용 기능을 추가해야 하는 경우가 많습니다.
+
+예:
+- 특정 컨트롤러의 유지보수 명령
+- 벤더 전용 진단/리셋 기능
+- 특수 파라미터 읽기/쓰기
+
+단순 접근 방식은 다음과 같습니다.
+
+```csharp
+if (motion[axisNo].Controller is IVendorFeature feature)
+{
+    feature.Func1();
+}
+```
+
+이 방식은 동작은 맞지만, 호출부마다 캐스팅 코드가 반복되고 공통 기능과 전용 기능의 사용 방식이 분리됩니다.
+
+그래서 `UnifiedMotion`은 `MotionAdapterBase` 기반 확장을 권장합니다.
+
+### 7-1. MotionAdapterBase 역할
+
+`MotionAdapterBase`는 `MotionManager` 위에 얇게 올라가는 사용자용 베이스 클래스입니다.
+
+- 공통 API: `MoveAbsAsync`, `MoveIncAsync`, `Stop`, `Home`, `ServoOn`, `AllStop` 등은 그대로 위임
+- 조회/검증: `GetAxis(...)`, `GetController(...)`, `GetFeature<TFeature>(...)`
+- 장비 전용 기능: 사용자 파생 클래스에서 추가
+
+즉, 런타임의 주체는 계속 `MotionManager`이고, 어댑터는 사용자 편의용 진입점만 제공합니다.
+
+### 7-2. 권장 구현 구조
+
+```csharp
+public interface IVendorFeature
+{
+    string Func1();
+}
+
+public sealed class VendorController : VController, IVendorFeature
+{
+    public VendorController(int index) : base(index)
+    {
+    }
+
+    public string Func1() => "ok";
+}
+
+public sealed class VendorMotionAdapter : MotionAdapterBase
+{
+    public VendorMotionAdapter(MotionManager motion) : base(motion)
+    {
+    }
+
+    public string Func1(int axisNo)
+    {
+        return GetFeature<IVendorFeature>(axisNo).Func1();
+    }
+}
+```
+
+사용 예:
+
+```csharp
+var adapter = new VendorMotionAdapter(motion);
+await adapter.MoveAbsAsync(axisNo, 1000);
+var result = adapter.Func1(axisNo);
+```
+
+Alarm Reset 같이 벤더 전용 유지보수 기능도 같은 방식으로 노출하는 것을 권장합니다.
+
+```csharp
+public interface IAlarmResetFeature
+{
+    void AlarmReset(int innerAxisNo);
+}
+
+public sealed class VendorMotionAdapter : MotionAdapterBase
+{
+    public VendorMotionAdapter(MotionManager motion) : base(motion)
+    {
+    }
+
+    public void AlarmReset(int axisNo)
+    {
+        var axis = GetAxis(axisNo);
+        GetFeature<IAlarmResetFeature>(axisNo).AlarmReset(axis.InnerAxisNo);
+    }
+}
+```
+
+사용자는 다음처럼 호출하면 된다.
+
+```csharp
+var adapter = new VendorMotionAdapter(motion);
+adapter.AlarmReset(axisNo);
+```
+
+### 7-3. 여러 컨트롤러 혼용 시 장점
+
+현장 장비는 축마다 서로 다른 컨트롤러에 매핑되는 경우가 흔합니다.
+어댑터 패턴을 사용하면 호출부는 항상 `axisNo` 기준으로만 접근하면 됩니다.
+
+- 어떤 컨트롤러가 바인딩되어 있는지는 런타임이 관리
+- 기능 지원 여부 판단은 어댑터 내부에서 처리
+- UI/시퀀스/스크립트 코드는 장비 타입 분기에서 자유로워짐
+
+### 7-4. 구현 원칙
+
+- 어댑터는 `MotionManager`를 감싸는 얇은 facade로 유지
+- 모션 실행 로직을 어댑터에 재구현하지 않음
+- 전용 기능은 컨트롤러 인터페이스로 정의하고 어댑터에서 래핑
+- 예외 메시지와 기능 지원 검사는 어댑터 내부로 집중
+
+## 8. 단일 축 클래스 정책
 
 축 상태 타입은 `MotionAxis` 단일 클래스 사용:
 - 런타임 외부 반환은 `Clone()` 복사본
 - 외부에서 내부 폴링 상태를 직접 오염시키지 않도록 보호
 
-## 8. 권장 구현 규칙
+추가로 `MotionAxis.Controller`는 외부 조회가 가능하지만 설정은 런타임 내부에서만 수행된다.
+이 값은 사용자 어댑터가 축에 연결된 실제 컨트롤러를 확인하는 용도로 사용한다.
+
+## 9. 권장 구현 규칙
 
 - 장비/시나리오 로직은 `IMotionRuntime`만 사용
 - UI 바인딩은 `MotionViewManager`/`MotionAxisItem`으로 제한
 - 신규 프로젝트도 `Runtime + ViewAdapter` 패턴 유지
+- 장비 전용 기능은 `MotionAdapterBase` 파생 클래스로 별도 진입점 제공

@@ -566,3 +566,15 @@
   - UnifiedMotion 확장 시 컨트롤러 전용 함수 호출 패턴 추가
   - 권장 방식: `motion[axisNo].Controller`에서 인터페이스 캐스팅 후 호출
   - `MotionAxis.Controller` 공개 범위 설명 추가(`public get; internal set;`)
+
+### 2026-03-23 (구조/문서)
+- `RatelSoft.UnifiedMotion`에 `MotionAdapterBase` 패턴 추가
+  - `MotionManager` 위에 사용자 전용 기능을 얹는 공통 베이스 제공
+  - 공통 모션 기능은 위임하고, 장비 전용 기능은 파생 클래스에서 래핑하는 방식
+- `RatelWPF` 샘플 업데이트
+  - `VController2MotionAdapter` 예제 추가
+  - `VController2` 전용 함수 호출을 `adapter.Func1(axisNo)` 패턴으로 정리
+- 문서 보강
+  - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`: `BaslerCameraEx` 상속 패턴의 의도/확장 포인트/사용 시나리오 추가
+  - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`: Motion `Alarm Reset` 같은 컨트롤러 전용 기능을 어댑터로 노출하는 예제 추가
+  - `docs/MOTION_RUNTIME_MANUAL.md`: 런타임 위에 어댑터를 얹는 확장 구조와 `AlarmReset(axisNo)` 패턴 추가
