@@ -257,17 +257,23 @@ public sealed class BaslerCameraAdapter : CameraAdapterBase
     {
     }
 
-    public async Task<GrabResult> ConnectAndGrabAsync(string cameraName)
+    public async Task<GrabResult> ConnectAndGrabAsync(CameraSelector selector)
     {
-        var ok = await ConnectAsync(cameraName);
+        var ok = await ConnectAsync(selector);
         if (!ok)
         {
-            throw new InvalidOperationException($"Connect failed: {cameraName}");
+            throw new InvalidOperationException($"Connect failed: {selector.Mode}");
         }
 
         await ReadCameraSettingsAsync();
         return await GrabOneAsync(5000);
     }
+
+    public Task<bool> ConnectFirstPhysicalAsync()
+        => ConnectAsync(CameraSelector.FirstPhysical());
+
+    public Task<bool> ConnectFirstEmulatorAsync()
+        => ConnectAsync(CameraSelector.FirstEmulator());
 }
 ```
 
@@ -275,9 +281,15 @@ public sealed class BaslerCameraAdapter : CameraAdapterBase
 
 ```csharp
 using var adapter = new BaslerCameraAdapter(CameraFactory.CreateCamera(CameraType.Basler));
-using var image = await adapter.ConnectAndGrabAsync("CAM1");
+using var image = await adapter.ConnectAndGrabAsync(CameraSelector.FirstPhysical());
 Console.WriteLine($"{image.Width}x{image.Height}");
 ```
+
+이 방식의 장점:
+
+- 호출부가 `[EMU] ...` 같은 display string 규칙을 알 필요가 없다.
+- `FriendlyName`, `FullName`, prefix 차이를 adapter 내부로 숨길 수 있다.
+- UI는 목록 문자열을 보여주고, 실제 연결은 selector 기반으로 고정할 수 있다.
 
 ### 2-3-2. 상속과 어댑터 차이
 
@@ -304,6 +316,33 @@ foreach (var name in names)
 
 현재 Basler 구현은 emulator를 `[EMU] ` 접두사로 구분해서 반환한다.
 식별 정보가 완전히 비어 있는 emulator placeholder 항목은 필터링된다.
+
+권장 연결 방식:
+
+```csharp
+using var physical = new BaslerCamera();
+using var emulator = new BaslerCamera();
+
+await physical.ConnectAsync(CameraSelector.FirstPhysical());
+await emulator.ConnectAsync(CameraSelector.FirstEmulator());
+```
+
+또는 특정 emulator를 raw 이름 기준으로 선택할 수도 있다.
+
+```csharp
+await emulator.ConnectAsync(CameraSelector.FriendlyName("Basler Emulation (0815-0000)"));
+await emulator.ConnectAsync(CameraSelector.FullName("Emulation (0815-0000)"));
+```
+
+Basler emulator 이름 정책:
+
+- display name canonical: `[EMU] Basler Emulation (0815-0000)`
+- 연결 허용 alias:
+  - `[EMU] Basler Emulation (0815-0000)`
+  - `Basler Emulation (0815-0000)`
+  - `Emulation (0815-0000)`
+
+즉 목록 표시와 연결 선택을 같은 문자열 비교 하나로 묶지 않고, `CameraSelector`로 분리하는 것이 안전하다.
 
 ## 3. UnifiedIO 확장
 

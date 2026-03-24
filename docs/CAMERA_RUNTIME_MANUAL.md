@@ -21,6 +21,8 @@
   - 그랩 결과, `Mat`, 폭/높이, 성공 여부, 타임스탬프, 에러 메시지를 담는다.
 - `CameraAdapterBase`
   - 공통 카메라 API 위에 사용자 전용 편의 함수나 장비 전용 기능을 얹는 베이스 클래스다.
+- `CameraSelector`
+  - 카메라 이름 문자열을 직접 맞춰 넣지 않고, 첫 번째 물리 카메라, 첫 번째 emulator, `FriendlyName`, `FullName` 같은 기준으로 장치를 선택하기 위한 selector 타입이다.
 
 ## 2. 벤더 DLL 배치 정책
 
@@ -173,7 +175,31 @@ foreach (var name in cameras)
 }
 ```
 
-### 4-2. 이름 없이 첫 번째 카메라 연결
+### 4-2. selector 기반 연결
+
+Basler처럼 실카메라와 emulator가 섞이는 환경에서는 문자열 display name을 직접 맞춰 넣는 것보다 `CameraSelector`를 사용하는 편이 안전하다.
+
+```csharp
+using var camera = CameraFactory.CreateCamera(CameraType.Basler);
+
+await camera.ConnectAsync(CameraSelector.FirstPhysical());
+await camera.DisconnectAsync();
+
+await camera.ConnectAsync(CameraSelector.FirstEmulator());
+await camera.DisconnectAsync();
+```
+
+지원되는 대표 selector:
+
+- `CameraSelector.First()`
+- `CameraSelector.FirstPhysical()`
+- `CameraSelector.FirstEmulator()`
+- `CameraSelector.DisplayName("CAM1")`
+- `CameraSelector.FriendlyName("Basler Emulation (0815-0000)")`
+- `CameraSelector.FullName("Emulation (0815-0000)")`
+- `CameraSelector.UserDefinedName("CAM1")`
+
+### 4-3. 이름 없이 첫 번째 카메라 연결
 
 ```csharp
 using var camera = CameraFactory.CreateCamera(CameraType.Basler);
@@ -184,7 +210,7 @@ if (!ok)
 }
 ```
 
-### 4-3. 이름으로 특정 카메라 연결
+### 4-4. 이름으로 특정 카메라 연결
 
 ```csharp
 using var camera = CameraFactory.CreateCamera(CameraType.Basler);
@@ -195,7 +221,7 @@ if (!ok)
 }
 ```
 
-### 4-4. 해제
+### 4-5. 해제
 
 ```csharp
 await camera.DisconnectAsync();
@@ -449,6 +475,9 @@ public abstract class CameraAdapterBase : IDisposable
     public Task<bool> ConnectAsync(string? cameraName = null)
         => Camera.ConnectAsync(cameraName);
 
+    public Task<bool> ConnectAsync(CameraSelector selector)
+        => Camera.ConnectAsync(selector);
+
     public Task<GrabResult> GrabOneAsync(int timeoutMs = 1000)
         => Camera.GrabOneAsync(timeoutMs);
 
@@ -489,12 +518,12 @@ public sealed class BaslerCameraAdapter : CameraAdapterBase
     {
     }
 
-    public async Task<GrabResult> ConnectAndGrabAsync(string cameraName)
+    public async Task<GrabResult> ConnectAndGrabAsync(CameraSelector selector)
     {
-        var ok = await ConnectAsync(cameraName);
+        var ok = await ConnectAsync(selector);
         if (!ok)
         {
-            throw new InvalidOperationException($"Connect failed: {cameraName}");
+            throw new InvalidOperationException($"Connect failed: {selector.Mode}");
         }
 
         return await GrabOneAsync(5000);
@@ -521,18 +550,40 @@ Environment.SetEnvironmentVariable("PYLON_CAMEMU", "1", EnvironmentVariableTarge
 using var physical = new BaslerCameraAdapter(CameraFactory.CreateCamera(CameraType.Basler));
 using var emulator = new BaslerCameraAdapter(CameraFactory.CreateCamera(CameraType.Basler));
 
-var names = await physical.GetAvailableCamerasAsync();
-var firstPhysical = names.First(n => !n.StartsWith("[EMU] "));
-var firstEmulator = names.First(n => n.StartsWith("[EMU] "));
-
-using var physicalImage = await physical.ConnectAndGrabAsync(firstPhysical);
-using var emulatorImage = await emulator.ConnectAndGrabAsync(firstEmulator);
+using var physicalImage = await physical.ConnectAndGrabAsync(CameraSelector.FirstPhysical());
+using var emulatorImage = await emulator.ConnectAndGrabAsync(CameraSelector.FirstEmulator());
 
 Console.WriteLine($"physical={physicalImage.Width}x{physicalImage.Height}");
 Console.WriteLine($"emulator={emulatorImage.Width}x{emulatorImage.Height}");
 ```
 
 현재 Basler 구현은 에뮬레이터 장치를 `[EMU] ` 접두사로 구분해서 반환한다. 식별 정보가 완전히 비어 있는 에뮬레이터 placeholder 항목은 필터링된다.
+
+권장 연결 규칙:
+
+- 목록 표시용: `GetAvailableCamerasAsync()`
+- 실제 선택/연결용: `CameraSelector`
+
+즉, UI는 목록 문자열을 보여줘도 되지만, 내부 연결은 가능하면 아래 selector를 쓰는 편이 낫다.
+
+```csharp
+await camera.ConnectAsync(CameraSelector.FirstPhysical());
+await camera.ConnectAsync(CameraSelector.FirstEmulator());
+await camera.ConnectAsync(CameraSelector.FriendlyName("Basler Emulation (0815-0000)"));
+await camera.ConnectAsync(CameraSelector.FullName("Emulation (0815-0000)"));
+```
+
+Basler emulator canonical display name 정책:
+
+- display name은 `"[EMU] " + FriendlyName`을 우선 사용한다.
+- `FriendlyName`이 없으면 `FullName`을 사용한다.
+- 연결 시에는 prefix 유무, `FriendlyName`, `FullName`을 모두 유연하게 허용한다.
+
+예를 들어 아래 입력은 같은 emulator를 가리킬 수 있다.
+
+- `[EMU] Basler Emulation (0815-0000)`
+- `Basler Emulation (0815-0000)`
+- `Emulation (0815-0000)`
 
 ### 13-2. 노출 100 적용 후 한 장 그랩
 
@@ -551,6 +602,34 @@ Console.WriteLine($"Grab={result.Success}, Size={result.Width}x{result.Height}")
 ```
 
 장비가 스텝 제약을 가지면 읽어온 값이 `100`이 아닌 인접 값일 수 있다.
+
+### 13-3. selector와 raw 목록을 함께 쓰는 예
+
+실제 앱에서는 장치 목록을 화면에 보여주되, 연결은 selector로 수행하는 구성이 가장 안정적이다.
+
+```csharp
+Environment.SetEnvironmentVariable("PYLON_CAMEMU", "2", EnvironmentVariableTarget.Process);
+
+using var probe = new BaslerCamera();
+var names = await probe.GetAvailableCamerasAsync();
+
+foreach (var name in names)
+{
+    Console.WriteLine(name);
+}
+
+using var physical = new BaslerCamera();
+using var emulator = new BaslerCamera();
+
+await physical.ConnectAsync(CameraSelector.FirstPhysical());
+await emulator.ConnectAsync(CameraSelector.FirstEmulator());
+
+using var physicalImage = await physical.GrabOneAsync(5000);
+using var emulatorImage = await emulator.GrabOneAsync(5000);
+
+Console.WriteLine($"physical={physicalImage.Width}x{physicalImage.Height}");
+Console.WriteLine($"emulator={emulatorImage.Width}x{emulatorImage.Height}");
+```
 
 ## 14. 사용자 카메라 등록 패턴
 

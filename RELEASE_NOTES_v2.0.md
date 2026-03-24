@@ -46,6 +46,30 @@
 
 ## 최근 업데이트 (미릴리스)
 
+### UnifiedCamera Basler selector API 및 emulator 연결 정책 정리 (2026-03-24)
+
+- `RatelSoft.UnifiedCamera`
+  - `CameraSelector`, `CameraSelectionMode` 추가.
+  - `CameraAdapterBase`에 `ConnectAsync(CameraSelector selector)` 추가.
+  - `BaslerCamera`에 selector 기반 연결 추가:
+    - `FirstPhysical`
+    - `FirstEmulator`
+    - `DisplayName`
+    - `FriendlyName`
+    - `FullName`
+    - `UserDefinedName`
+  - Basler emulator canonical display name 정책 정리:
+    - display name은 `[EMU] ` 접두사를 사용
+    - emulator는 `FriendlyName`, `FullName` 기준으로 안전하게 선택
+  - `GetAvailableCamerasAsync()`와 `ConnectAsync()`가 같은 이름 정책을 공유하도록 정리.
+  - emulator placeholder 항목 필터링 유지.
+- 문서:
+  - `dist-lib/docs/CAMERA_RUNTIME_MANUAL.md`
+    - selector 기반 연결 사용법 추가
+    - Basler emulator 이름 정책과 권장 연결 방식 추가
+  - `dist-lib/docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`
+    - adapter + selector 조합 예제 추가
+
 ### RatelViewerEx 선택 스타일/XAML 테스트 및 Polygon Defect 샘플 보강 (2026-03-18)
 
 - `RatelWPF/IPWindow.xaml`, `RatelWPF/IPWindow.xaml.cs`
