@@ -599,3 +599,8 @@
   - `docs/MOTION_RUNTIME_MANUAL.md`를 독립 라이브러리 설명서 형태로 전면 재작성
   - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`를 registry / inheritance / adapter 기준으로 재구성
   - `docs/CAMERA_RUNTIME_MANUAL.md` 신규 추가
+  - 사용자 벤더 DLL 배치 정책과 `BaslerPylonManagedFile` 사용 예제 추가
+- 벤더 DLL 복사 정책 정리
+  - `UnifiedCamera`는 벤더 DLL을 컴파일 참조만 하고 자동 출력 복사는 하지 않도록 변경
+  - 최상위 앱이 `BaslerPylonManagedFile` 또는 명시적 `<Reference>`로 복사 책임을 가지도록 정리
+  - `RatelWPF`는 `RatelWPF/CameraAssembly/pylon/2506/Basler.Pylon.dll` 경로를 사용하는 예제로 변경
