@@ -23,6 +23,9 @@
   - 공통 카메라 API 위에 사용자 전용 편의 함수나 장비 전용 기능을 얹는 베이스 클래스다.
 - `CameraSelector`
   - 카메라 이름 문자열을 직접 맞춰 넣지 않고, 첫 번째 물리 카메라, 첫 번째 emulator, `FriendlyName`, `FullName` 같은 기준으로 장치를 선택하기 위한 selector 타입이다.
+- `CameraDescriptor`
+  - 장치 목록 표시용 메타데이터다.
+  - `DisplayName`, `CanonicalName`, `IsEmulator`, `FriendlyName`, `FullName`, `UserDefinedName`, `DeviceSerialNumber`를 담는다.
 
 ## 2. 벤더 DLL 배치 정책
 
@@ -161,6 +164,15 @@ using var camera = await CameraFactory.CreateAndConnectAsync(
     settings: settings);
 ```
 
+selector 기반 overload도 제공된다.
+
+```csharp
+using var camera = await CameraFactory.CreateAndConnectAsync(
+    CameraType.Basler,
+    CameraSelector.FirstEmulator(),
+    settings);
+```
+
 ## 4. 연결과 해제
 
 ### 4-1. 장치 목록 조회
@@ -172,6 +184,23 @@ var cameras = await camera.GetAvailableCamerasAsync();
 foreach (var name in cameras)
 {
     Console.WriteLine(name);
+}
+```
+
+### 4-1-1. descriptor 목록 조회
+
+표시 문자열 외에 raw 메타데이터가 필요하면 descriptor 목록을 조회한다.
+
+```csharp
+using var camera = CameraFactory.CreateCamera(CameraType.Basler);
+var descriptors = await camera.GetAvailableCameraDescriptorsAsync();
+
+foreach (var item in descriptors)
+{
+    Console.WriteLine($"Display={item.DisplayName}");
+    Console.WriteLine($"  Emulator={item.IsEmulator}");
+    Console.WriteLine($"  Friendly={item.FriendlyName}");
+    Console.WriteLine($"  Full={item.FullName}");
 }
 ```
 
@@ -562,6 +591,7 @@ Console.WriteLine($"emulator={emulatorImage.Width}x{emulatorImage.Height}");
 권장 연결 규칙:
 
 - 목록 표시용: `GetAvailableCamerasAsync()`
+- 목록 + 메타데이터 표시용: `GetAvailableCameraDescriptorsAsync()`
 - 실제 선택/연결용: `CameraSelector`
 
 즉, UI는 목록 문자열을 보여줘도 되지만, 내부 연결은 가능하면 아래 selector를 쓰는 편이 낫다.

@@ -50,7 +50,10 @@
 
 - `RatelSoft.UnifiedCamera`
   - `CameraSelector`, `CameraSelectionMode` 추가.
+  - `CameraDescriptor` 추가.
   - `CameraAdapterBase`에 `ConnectAsync(CameraSelector selector)` 추가.
+  - `CameraAdapterBase`에 `GetAvailableCameraDescriptorsAsync()` 추가.
+  - `CameraFactory.CreateAndConnectAsync(..., CameraSelector selector)` overload 추가.
   - `BaslerCamera`에 selector 기반 연결 추가:
     - `FirstPhysical`
     - `FirstEmulator`
@@ -58,6 +61,7 @@
     - `FriendlyName`
     - `FullName`
     - `UserDefinedName`
+  - `BaslerCamera.GetAvailableCameraDescriptorsAsync()` 추가.
   - Basler emulator canonical display name 정책 정리:
     - display name은 `[EMU] ` 접두사를 사용
     - emulator는 `FriendlyName`, `FullName` 기준으로 안전하게 선택

@@ -290,6 +290,7 @@ Console.WriteLine($"{image.Width}x{image.Height}");
 - 호출부가 `[EMU] ...` 같은 display string 규칙을 알 필요가 없다.
 - `FriendlyName`, `FullName`, prefix 차이를 adapter 내부로 숨길 수 있다.
 - UI는 목록 문자열을 보여주고, 실제 연결은 selector 기반으로 고정할 수 있다.
+- 필요하면 `GetAvailableCameraDescriptorsAsync()`로 `FriendlyName`, `FullName`, `IsEmulator`를 함께 조회할 수 있다.
 
 ### 2-3-2. 상속과 어댑터 차이
 
