@@ -1,17 +1,125 @@
 # Unified Custom Device Guide
 
-이 문서는 Unified 시리즈(`UnifiedCamera`, `UnifiedIO`, `UnifiedMotion`)에서 사용자 정의 디바이스를 추가하는 방법을 설명합니다.
+이 문서는 `UnifiedCamera`, `UnifiedIO`, `UnifiedMotion`에서 사용자 정의 장비를 추가하거나, 기존 장비 구현 위에 현장 전용 기능을 얹는 방법을 설명한다.
 
-## 핵심 개념
+핵심 원칙은 다음과 같다.
 
-- 기존 `enum` 기반 API는 그대로 사용 가능합니다.
-- 새 확장 방식은 `string kind + registry` 입니다.
-- 사용자 코드는 런타임에 디바이스 생성자를 등록한 뒤 `Create("my.kind")`로 생성합니다.
-- 등록은 앱 시작 시 1회 수행을 권장합니다.
+- 공통 동작은 라이브러리 기본 API를 유지한다.
+- 장비별 차이는 `kind + registry`, 상속, 어댑터로 분리한다.
+- 장비 내부 파이프라인 확장과 외부 호출 편의 확장을 구분한다.
+- 공개 라이브러리 표면은 단순하게 두고, 현장 전용 기능은 사용자 코드에서 얹는다.
 
-## 1) UnifiedCamera 확장
+## 1. 확장 방식 개요
 
-### 1-1. BaslerCameraEx 작성
+Unified 계열의 확장은 보통 세 가지 방식으로 나뉜다.
+
+### 1-1. kind + registry
+
+새 장비 종류를 등록해서 `Create("my.kind")`로 생성하는 방식이다.
+
+적합한 경우:
+- 새 장비 타입 추가
+- 기본 enum 외에 현장 전용 식별자 추가
+- 런타임에 장비 생성자를 주입하고 싶을 때
+
+### 1-2. 상속
+
+기존 장비 구현의 내부 파이프라인 일부를 바꾸는 방식이다.
+
+적합한 경우:
+- 연결 직후 설정 추가
+- 수신 프레임 후처리
+- 장비 SDK 객체에 직접 접근해야 하는 추가 동작
+
+### 1-3. 어댑터
+
+공통 런타임 위에 사용자 전용 기능을 얹는 방식이다.
+
+적합한 경우:
+- 호출부 반복 코드 제거
+- 장비 전용 기능을 명시적 메서드로 노출
+- 여러 장비가 섞여도 호출부를 단순하게 유지하고 싶을 때
+
+정리:
+- 새 장비 등록: `registry`
+- 내부 동작 확장: `inheritance`
+- 외부 사용 편의 확장: `adapter`
+
+## 2. UnifiedCamera 확장
+
+## 2-1. 카메라 등록
+
+새 카메라를 문자열 `kind`로 등록할 수 있다.
+
+```csharp
+using RatelSoft.Utils.UnifiedCamera;
+
+CameraTypeRegistry.Register(
+    kind: "mycompany.camera.custom",
+    creator: () => new MyCamera(),
+    mappedType: CameraType.Custom,
+    overwrite: true);
+
+using var camera = CameraFactory.CreateCamera("mycompany.camera.custom");
+```
+
+직접 구현 예:
+
+```csharp
+using CameraService.Contracts;
+using RatelSoft.Utils.UnifiedCamera;
+
+public sealed class MyCamera : CameraBase
+{
+    public override CameraType Type => CameraType.Custom;
+    public override string Kind => "mycompany.camera.custom";
+
+    public override Task<bool> ConnectAsync(string? cameraName = null)
+        => Task.FromResult(true);
+
+    public override Task DisconnectAsync()
+        => Task.CompletedTask;
+
+    public override Task<bool> StartGrabbingAsync(int grabCount)
+        => Task.FromResult(true);
+
+    public override Task StopGrabbingAsync()
+        => Task.CompletedTask;
+
+    public override Task<GrabResult> GrabOneAsync(int timeoutMs = 1000)
+    {
+        return Task.FromResult(new GrabResult
+        {
+            Success = true,
+            Width = 640,
+            Height = 480,
+            Timestamp = DateTime.Now
+        });
+    }
+
+    public override Task<bool> SoftwareTriggerAsync()
+        => Task.FromResult(true);
+
+    public override Task<bool> SetTriggerModeAsync(bool enabled, TriggerSource source)
+        => Task.FromResult(true);
+
+    public override Task<bool> ResetAsync()
+        => Task.FromResult(true);
+
+    public override Task<bool> GetInputStateAsync()
+        => Task.FromResult(false);
+
+    public override Task<List<string>> GetAvailableCamerasAsync()
+        => Task.FromResult(new List<string> { "MyCamera-1" });
+}
+```
+
+## 2-2. BaslerCameraEx 패턴
+
+카메라 확장에서 가장 중요한 패턴은 `BaslerCameraEx` 같은 상속 구조다.
+이 패턴의 핵심은 "새 Basler 드라이버를 다시 작성하는 것"이 아니라, 기존 `BaslerCamera`의 연결, 에러 처리, 이벤트 배선, 그랩 파이프라인을 그대로 재사용하면서 필요한 단계만 바꾸는 데 있다.
+
+### 2-2-1. 기본 형태
 
 ```csharp
 using RatelSoft.Utils.UnifiedCamera;
@@ -19,81 +127,33 @@ using RatelSoft.Utils.UnifiedCamera;
 public sealed class BaslerCameraEx : BaslerCamera
 {
     public override string Kind => "mycompany.camera.basler-ex";
-
-    protected override GrabResult ConvertGrabResult(Basler.Pylon.IGrabResult grabResult)
-    {
-        var result = base.ConvertGrabResult(grabResult);
-        // 사용자 후처리(메타데이터, 필터링 등)
-        return result;
-    }
 }
 ```
 
-### 1-2. Registry 등록
+### 2-2-2. 왜 이 구조가 중요한가
 
-```csharp
-CameraTypeRegistry.Register(
-    kind: "mycompany.camera.basler-ex",
-    creator: () => new BaslerCameraEx(),
-    mappedType: CameraType.Custom);
-```
+`BaslerCamera`는 이미 다음 책임을 가진다.
 
-### 1-3. 생성
+- 카메라 탐색과 연결
+- Grabber 이벤트 연결
+- 상태 전이와 에러 처리
+- 단일 그랩과 연속 그랩
+- `GrabResult` 변환과 프레임 전달
 
-```csharp
-var camera = CameraFactory.CreateCamera("mycompany.camera.basler-ex");
-// 또는 enum 경로 유지 시
-var legacy = CameraFactory.CreateCamera(CameraType.Basler);
-```
+즉, 사용자 입장에서는 Basler SDK 초기화와 이벤트 wiring을 다시 작성하지 않고도, 설정, 이벤트, 결과 변환 같은 확장 포인트만 선택적으로 오버라이드할 수 있다.
 
-### 1-4. 왜 `BaslerCameraEx` 패턴이 중요한가
-
-이 패턴의 핵심은 "새 Basler 드라이버를 다시 만드는 것"이 아니라,
-기존 `BaslerCamera`의 연결/그랩/이벤트 파이프라인을 그대로 유지한 채 필요한 단계만 커스터마이즈하는 데 있습니다.
-
-`BaslerCamera`는 이미 다음 책임을 가지고 있습니다.
-
-- 카메라 탐색 및 연결
-- StreamGrabber 이벤트 연결
-- 기본 상태 전이와 에러 처리
-- 단일 그랩/연속 그랩 제어
-- `GrabResult` 생성과 `OnFrameReceived(...)` 호출
-
-즉, 사용자 입장에서는 Basler SDK 초기화와 이벤트 wiring을 다시 작성하지 않고도
-"설정 단계", "프레임 이벤트 단계", "결과 변환 단계"만 선택적으로 바꿀 수 있습니다.
-
-### 1-5. 열려 있는 확장 포인트와 책임
-
-`BaslerCameraEx : BaslerCamera` 구조에서 실제로 의미 있는 확장 포인트는 다음과 같습니다.
+### 2-2-3. 주요 확장 포인트
 
 - `_camera`
   - Basler SDK 객체 직접 접근용 escape hatch
-  - 정말 필요한 경우에만 사용
 - `ApplySettingsAsync()`
-  - 연결 직후 추가 파라미터를 적용하는 단계
-  - UserSet, Trigger, Vendor Parameter, Counter/Timer류 설정에 적합
+  - 연결 직후 추가 파라미터 적용
 - `OnBaslerImageGrabbed(...)`
-  - 프레임 수신 이벤트를 가로채는 단계
-  - 추가 로깅, 조건부 드롭, 프레임 카운팅, 진단 코드 삽입에 적합
+  - 이벤트 시점 진단과 추적 코드 삽입
 - `ConvertGrabResult(...)`
-  - 최종 `GrabResult` 생성 방식을 바꾸는 단계
-  - 이미지 후처리, 메타데이터 보강, 포맷 변환에 적합
+  - 결과 이미지 변환과 후처리
 
-중요한 점은 각 포인트의 용도가 다르다는 것입니다.
-설정 변경은 `ApplySettingsAsync()`, 결과 가공은 `ConvertGrabResult()`에 넣는 식으로 책임을 맞춰야 유지보수가 쉬워집니다.
-
-### 1-6. 언제 이 패턴을 쓰는가
-
-다음처럼 "Basler 자체는 그대로 쓰되 일부만 후킹"하고 싶은 경우에 적합합니다.
-
-- 연결 직후 Basler 파라미터를 추가 적용하고 싶을 때
-- 받은 프레임에 사용자 후처리를 넣고 싶을 때
-- `GrabResult`에 타임스탬프 외 사용자 메타데이터를 추가하고 싶을 때
-- 기본 Basler 동작은 유지하면서 현장별 규칙만 덧붙이고 싶을 때
-
-반대로, Basler 전체 동작을 완전히 새로 바꾸려는 목적이라면 상속보다 별도 구현이 더 나을 수 있습니다.
-
-### 1-7. 예제 1: 연결 직후 사용자 설정 추가
+### 2-2-4. 예제: 연결 직후 설정 추가
 
 ```csharp
 using RatelSoft.Utils.UnifiedCamera;
@@ -121,13 +181,7 @@ public sealed class BaslerCameraEx : BaslerCamera
 }
 ```
 
-이 예제의 의미:
-
-- 연결/이벤트/에러 처리 구조는 그대로 유지
-- 연결 직후 필요한 Basler 파라미터만 추가 적용
-- 기존 `BaslerCamera` 개선 사항을 계속 상속받음
-
-### 1-8. 예제 2: 프레임 수신 직후 추가 후처리
+### 2-2-5. 예제: 결과 이미지 후처리
 
 ```csharp
 using OpenCvSharp;
@@ -155,13 +209,7 @@ public sealed class BaslerCameraEx : BaslerCamera
 }
 ```
 
-이 예제의 의미:
-
-- Basler grab 결과 생성은 기본 구현을 재사용
-- 사용자 후처리만 마지막 단계에서 추가
-- 이벤트 파이프라인은 건드리지 않음
-
-### 1-9. 예제 3: 이벤트 단계에 진단 코드 추가
+### 2-2-6. 예제: 이벤트 시점 진단 코드 추가
 
 ```csharp
 using RatelSoft.Utils.UnifiedCamera;
@@ -172,45 +220,94 @@ public sealed class BaslerCameraEx : BaslerCamera
 
     protected override void OnBaslerImageGrabbed(object? sender, Basler.Pylon.ImageGrabbedEventArgs e)
     {
-        // 필요 시 grab 상태, 카운터, 간단한 진단 로깅 추가
+        // tracing, counter, conditional logging
         base.OnBaslerImageGrabbed(sender, e);
     }
 }
 ```
 
-이 오버라이드는 프레임 자체를 바꾸기보다는,
-이벤트 시점에 진단 로직이나 현장 전용 추적 코드를 넣고 싶을 때 적합합니다.
-
-### 1-10. 권장/비권장 패턴
+### 2-2-7. 권장 규칙
 
 권장:
-
-- 설정 추가는 `ApplySettingsAsync()`에 넣기
-- 결과 후처리는 `ConvertGrabResult()`에 넣기
-- 이벤트 추적/모니터링은 `OnBaslerImageGrabbed(...)`에 넣기
-- `_camera` 직접 접근은 필요한 지점으로 제한하기
+- 설정 추가는 `ApplySettingsAsync()`에 넣는다.
+- 결과 후처리는 `ConvertGrabResult()`에 넣는다.
+- 이벤트 추적은 `OnBaslerImageGrabbed(...)`에 넣는다.
+- `_camera` 직접 접근은 필요한 지점으로 제한한다.
 
 비권장:
+- `ConnectAsync()` 전체를 복사해서 재구현한다.
+- `_camera` 접근 코드를 여러 호출부에 흩뿌린다.
+- 결과 변환 메서드에서 연결 상태 제어까지 같이 처리한다.
 
-- `ConnectAsync()` 전체를 복사해서 재구현하기
-- `_camera` 접근 코드를 여러 메서드/호출부에 흩뿌리기
-- `ConvertGrabResult()`에서 연결 상태 제어까지 같이 처리하기
+## 2-3. CameraAdapterBase 패턴
 
-### 1-11. Motion 확장과 다른 점
+카메라 쪽은 상속만으로 끝나지 않는다.
+실제 사용자 프로그램에서는 `Connect + Settings Read + GrabOne` 같은 반복 동작이나, 장비 전용 기능을 묶는 외부 진입점도 필요하다.
 
-Camera 쪽의 `BaslerCameraEx`는 "단일 장비 파이프라인을 부분 오버라이드하는 상속 패턴"입니다.
-반면 Motion 쪽은 여러 컨트롤러가 축 단위로 섞여 사용되므로, 호출부 편의를 위해 어댑터 패턴이 더 중요합니다.
+이 역할은 `CameraAdapterBase`가 맡는다.
 
-즉,
+### 2-3-1. 기본 예
 
-- Camera: 기존 장비 파이프라인 재사용 + 일부 단계 오버라이드
-- Motion: 런타임 위에 사용자 어댑터를 얹어 전용 기능 노출
+```csharp
+using RatelSoft.Utils.UnifiedCamera;
 
-두 구조는 목적이 다르며, 문서도 이 차이를 기준으로 이해하는 것이 좋습니다.
+public sealed class BaslerCameraAdapter : CameraAdapterBase
+{
+    public BaslerCameraAdapter(ICamera camera) : base(camera)
+    {
+    }
 
-## 2) UnifiedIO 확장
+    public async Task<GrabResult> ConnectAndGrabAsync(string cameraName)
+    {
+        var ok = await ConnectAsync(cameraName);
+        if (!ok)
+        {
+            throw new InvalidOperationException($"Connect failed: {cameraName}");
+        }
 
-### 2-1. 사용자 IO 구현
+        await ReadCameraSettingsAsync();
+        return await GrabOneAsync(5000);
+    }
+}
+```
+
+사용:
+
+```csharp
+using var adapter = new BaslerCameraAdapter(CameraFactory.CreateCamera(CameraType.Basler));
+using var image = await adapter.ConnectAndGrabAsync("CAM1");
+Console.WriteLine($"{image.Width}x{image.Height}");
+```
+
+### 2-3-2. 상속과 어댑터 차이
+
+- `BaslerCameraEx`
+  - 내부 파이프라인 확장
+- `BaslerCameraAdapter`
+  - 외부 호출 코드 정리
+
+두 방식은 경쟁 관계가 아니라 서로 다른 계층이다.
+
+## 2-4. Basler emulator 예제
+
+```csharp
+Environment.SetEnvironmentVariable("PYLON_CAMEMU", "1", EnvironmentVariableTarget.Process);
+
+using var camera = CameraFactory.CreateCamera(CameraType.Basler);
+var names = await camera.GetAvailableCamerasAsync();
+
+foreach (var name in names)
+{
+    Console.WriteLine(name);
+}
+```
+
+현재 Basler 구현은 emulator를 `[EMU] ` 접두사로 구분해서 반환한다.
+식별 정보가 완전히 비어 있는 emulator placeholder 항목은 필터링된다.
+
+## 3. UnifiedIO 확장
+
+## 3-1. IO 장치 구현
 
 ```csharp
 using RatelSoft.Utils.UnifiedIO;
@@ -245,20 +342,24 @@ public sealed class MyIoDevice : IODeviceBase
 }
 ```
 
-### 2-2. Registry 등록 및 생성
+## 3-2. 등록과 생성
 
 ```csharp
 IODeviceTypeRegistry.Register(
     kind: "mycompany.io.custom",
     creator: () => new MyIoDevice(),
-    mappedType: IODeviceType.Custom);
+    mappedType: IODeviceType.Custom,
+    overwrite: true);
 
 var io = IODeviceFactory.Create("mycompany.io.custom");
 ```
 
-## 3) UnifiedMotion 확장
+## 4. UnifiedMotion 확장
 
-### 3-1. 사용자 Controller 구현
+Motion 쪽은 Camera와 성격이 다르다.
+여러 컨트롤러가 축 단위로 섞여 쓰이기 때문에, 내부 파이프라인 상속보다 어댑터 패턴이 더 중요하다.
+
+## 4-1. 컨트롤러 등록
 
 ```csharp
 using RatelSoft.Utils.UnifiedMotion;
@@ -270,11 +371,7 @@ public sealed class MyMotionController : MotionControllerBase
     public override MotionControllerType ControllerType => MotionControllerType.Custom;
     public override string Kind => "mycompany.motion.custom";
 
-    public override void SetInfo()
-    {
-        // 상태 동기화 구현
-    }
-
+    public override void SetInfo() { }
     public override void AbsMove(int axisNo, double position) { }
     public override void IncMove(int axisNo, double position) { }
     public override void Stop(int axisNo) { }
@@ -282,240 +379,110 @@ public sealed class MyMotionController : MotionControllerBase
 }
 ```
 
-### 3-2. Registry 등록 및 생성
-
 ```csharp
 MotionControllerTypeRegistry.Register(
     kind: "mycompany.motion.custom",
     creator: index => new MyMotionController(index),
-    mappedType: MotionControllerType.Custom);
+    mappedType: MotionControllerType.Custom,
+    overwrite: true);
 
 var controller = MotionControllerFactory.Create("mycompany.motion.custom", index: 0);
 ```
 
-### 3-3. 단순 캐스팅 방식의 한계
+## 4-2. MotionAdapterBase 패턴
 
-`UnifiedMotion`에서는 컨트롤러 인스턴스를 `MotionManager`가 소유하고 관리합니다.
-따라서 사용자 코드가 컨트롤러를 별도로 새로 만들기보다는, 축에 바인딩된 컨트롤러에 접근하는 것이 구조상 맞습니다.
+`UnifiedMotion`에서 컨트롤러 인스턴스는 `MotionManager`가 소유한다.
+따라서 사용자 코드는 새 컨트롤러를 따로 만들어 들고 있기보다, 축에 바인딩된 컨트롤러를 기준으로 전용 기능을 노출하는 편이 구조상 맞다.
 
-예를 들어 장비별 전용 기능이 인터페이스로 노출되어 있다면 다음처럼 접근할 수 있습니다.
+가장 단순한 접근은 다음과 같다.
 
 ```csharp
-if (motion[0].Controller is IMyMotionFeature feature)
+if (motion[axisNo].Controller is IVendorFeature feature)
 {
-    var result = feature.Func1();
+    feature.Func1();
 }
 ```
 
-하지만 현장 코드에서는 이 패턴만으로는 다음 문제가 자주 발생합니다.
+하지만 이 패턴은 호출부마다 캐스팅이 반복된다. 그래서 `MotionAdapterBase`를 권장한다.
 
-- 호출부마다 `is` / 캐스팅 코드가 반복됨
-- 장비가 2~3종 섞이면 기능 분기 로직이 UI/시퀀스 코드로 퍼짐
-- 공통 모션 기능(`MoveAbsAsync`, `Stop`, `Home`)과 장비 전용 기능이 서로 다른 진입점으로 분리됨
-
-즉, 구조적으로는 맞지만 사용성 측면에서는 호출 코드가 거칠어집니다.
-
-### 3-4. 권장 패턴: MotionAdapterBase + 사용자 어댑터
-
-이 문제를 줄이기 위해 `UnifiedMotion` 라이브러리는 `MotionAdapterBase`를 제공합니다.
-이 클래스는 `MotionManager` 위에 얇은 어댑터 계층을 두는 용도입니다.
-
-역할은 다음과 같습니다.
-
-- 공통 기능은 `MotionManager`로 그대로 위임
-- 장비 전용 기능은 파생 클래스에서 메서드로 노출
-- 내부적으로만 `Controller` / 인터페이스 캐스팅 수행
-
-핵심 베이스 예시는 다음과 같습니다.
+### 4-2-1. Func1 예제
 
 ```csharp
-using RatelSoft.Utils.UnifiedMotion;
-
-public abstract class MotionAdapterBase
-{
-    protected MotionAdapterBase(MotionManager motion)
-    {
-        Motion = motion ?? throw new ArgumentNullException(nameof(motion));
-    }
-
-    protected MotionManager Motion { get; }
-
-    public Task MoveAbsAsync(int axisNo, double position, int timeout = 0, CancellationToken token = default)
-        => Motion.MoveAbsAsync(axisNo, position, timeout, token);
-
-    public void Stop(int axisNo)
-        => Motion.Stop(axisNo);
-
-    protected TFeature GetFeature<TFeature>(int axisNo) where TFeature : class
-    {
-        var controller = Motion[axisNo].Controller
-            ?? throw new InvalidOperationException($"Axis {axisNo} has no controller.");
-
-        return controller as TFeature
-            ?? throw new NotSupportedException(
-                $"Axis {axisNo} controller {controller.GetType().Name} does not support {typeof(TFeature).Name}.");
-    }
-}
-```
-
-### 3-5. 사용자 컨트롤러 + 어댑터 구현 예시
-
-컨트롤러는 전용 기능을 인터페이스로 노출합니다.
-
-```csharp
-using RatelSoft.Utils.UnifiedMotion;
-
-public interface IMyMotionFeature
+public interface IVendorFeature
 {
     string Func1();
 }
 
-public sealed class MyMotionController : VController, IMyMotionFeature
+public sealed class VendorController : VController, IVendorFeature
 {
-    public MyMotionController(int index, int maxMotorCount = 32) : base(index, maxMotorCount)
+    public VendorController(int index) : base(index)
     {
     }
 
-    public string Func1()
-    {
-        return $"Func1 called. Index={Index}";
-    }
+    public string Func1() => "ok";
 }
-```
 
-그 위에 사용자용 어댑터를 얹습니다.
-
-```csharp
-using RatelSoft.Utils.UnifiedMotion;
-
-public sealed class MyMotionAdapter : MotionAdapterBase
+public sealed class VendorMotionAdapter : MotionAdapterBase
 {
-    public MyMotionAdapter(MotionManager motion) : base(motion)
+    public VendorMotionAdapter(MotionManager motion) : base(motion)
     {
     }
 
     public string Func1(int axisNo)
     {
-        return GetFeature<IMyMotionFeature>(axisNo).Func1();
+        return GetFeature<IVendorFeature>(axisNo).Func1();
     }
 }
 ```
 
-### 3-6. 실제 사용 흐름
-
-축 구성 단계에서는 기존처럼 컨트롤러를 등록합니다.
+사용:
 
 ```csharp
 var motion = new MotionManager();
-var controller = new MyMotionController(0);
+var controller = new VendorController(0);
 
-motion.AddAxis(0, new MotionAxis
-{
-    AxisName = "X",
-    InnerAxisNo = 0
-}, controller);
-
+motion.AddAxis(0, new MotionAxis { AxisName = "X", InnerAxisNo = 0 }, controller);
 motion.Open();
-```
 
-사용 단계에서는 어댑터만 사용합니다.
-
-```csharp
-var adapter = new MyMotionAdapter(motion);
-
-await adapter.MoveAbsAsync(0, 1000);
+var adapter = new VendorMotionAdapter(motion);
 var result = adapter.Func1(0);
-adapter.Stop(0);
+await adapter.MoveAbsAsync(0, 1000);
 ```
 
-이 패턴의 장점:
+### 4-2-2. Alarm Reset 예제
 
-- 호출부가 컨트롤러 타입을 몰라도 됨
-- 공통 기능과 장비 전용 기능을 동일한 객체에서 사용 가능
-- 축 번호 기준으로 여러 컨트롤러를 자연스럽게 혼용 가능
-- 캐스팅, 예외 메시지, 기능 지원 여부 판단을 한 곳에 모을 수 있음
-
-### 3-7. 현장 예제: Alarm Reset 기능 추가
-
-실제 현장에서는 `Move`, `Home` 같은 공통 기능보다,
-컨트롤러 벤더 전용 기능이 더 자주 문제를 만듭니다.
-대표적인 예가 `Alarm Reset`입니다.
-
-이 기능을 호출부에서 직접 캐스팅하며 쓰기 시작하면 다음처럼 됩니다.
-
-```csharp
-if (motion[axisNo].Controller is IAlarmResetFeature feature)
-{
-    feature.AlarmReset(axisNo);
-}
-```
-
-한두 번은 괜찮지만, 실제 코드에서는 아래 문제가 생깁니다.
-
-- 화면/시퀀스/스크립트마다 같은 캐스팅 코드 반복
-- 컨트롤러가 2~3종 섞이면 지원 여부 분기가 호출부로 퍼짐
-- 공통 모션 API와 전용 유지보수 API가 분리되어 사용성 저하
-
-그래서 `MotionAdapterBase` 위에 전용 진입점을 주는 방식이 더 적합합니다.
-
-#### 3-7-1. 컨트롤러 인터페이스
+현장에서 더 자주 필요한 형태는 `Alarm Reset` 같은 벤더 전용 유지보수 기능이다.
 
 ```csharp
 public interface IAlarmResetFeature
 {
     void AlarmReset(int innerAxisNo);
 }
-```
 
-#### 3-7-2. 사용자 컨트롤러 구현
-
-```csharp
-using RatelSoft.Utils.UnifiedMotion;
-
-public sealed class MyMotionController : MotionControllerBase, IAlarmResetFeature
+public sealed class VendorController : MotionControllerBase, IAlarmResetFeature
 {
-    public MyMotionController(int index) : base(index)
+    public VendorController(int index) : base(index)
     {
     }
 
     public override MotionControllerType ControllerType => MotionControllerType.Custom;
     public override string Kind => "mycompany.motion.custom";
 
-    public override void SetInfo()
-    {
-    }
-
-    public override void AbsMove(int axisNo, double position)
-    {
-    }
-
-    public override void IncMove(int axisNo, double position)
-    {
-    }
-
-    public override void Stop(int axisNo)
-    {
-    }
-
-    public override void Home(int axisNo)
-    {
-    }
+    public override void SetInfo() { }
+    public override void AbsMove(int axisNo, double position) { }
+    public override void IncMove(int axisNo, double position) { }
+    public override void Stop(int axisNo) { }
+    public override void Home(int axisNo) { }
 
     public void AlarmReset(int innerAxisNo)
     {
-        // 벤더 SDK 또는 명령 프로토콜 호출
+        // vendor SDK call
     }
 }
-```
 
-#### 3-7-3. 사용자 어댑터 구현
-
-```csharp
-using RatelSoft.Utils.UnifiedMotion;
-
-public sealed class MyMotionAdapter : MotionAdapterBase
+public sealed class VendorMotionAdapter : MotionAdapterBase
 {
-    public MyMotionAdapter(MotionManager motion) : base(motion)
+    public VendorMotionAdapter(MotionManager motion) : base(motion)
     {
     }
 
@@ -527,45 +494,56 @@ public sealed class MyMotionAdapter : MotionAdapterBase
 }
 ```
 
-#### 3-7-4. 사용자 호출 코드
+사용:
 
 ```csharp
-var adapter = new MyMotionAdapter(motion);
-
+var adapter = new VendorMotionAdapter(motion);
 adapter.AlarmReset(0);
-await adapter.MoveAbsAsync(0, 1000);
-adapter.Stop(0);
 ```
 
-이렇게 하면 호출자는 더 이상 컨트롤러 타입, 인터페이스 캐스팅, 내부 축 번호(`InnerAxisNo`)를 신경 쓸 필요가 없습니다.
-즉, 어댑터가 "현장 코드용 API 표면" 역할을 하게 됩니다.
+이렇게 하면 호출자는 컨트롤러 타입이나 `InnerAxisNo`를 알 필요가 없다.
 
-### 3-8. 설계 규칙
+## 5. 어떤 방식을 선택할 것인가
 
-`MotionAdapterBase`를 사용할 때는 다음 규칙을 권장합니다.
+### 5-1. Camera
 
-- 어댑터는 `MotionManager`의 대체물이 아니라 얇은 facade여야 합니다.
-- 공통 모션 로직을 재구현하지 말고 `MotionManager`로 위임하세요.
-- 장비 전용 기능은 컨트롤러에 두고, 어댑터는 이를 사용자 친화적인 메서드로 래핑하세요.
-- 가능하면 컨트롤러 전용 기능은 인터페이스(`IMyMotionFeature`)로 노출하세요.
-- `MotionAxis.Controller`는 조회(`get`)만 외부 공개되고, 설정(`set`)은 런타임 내부(`internal`)에서만 유지하세요.
+- 새 장비 타입 추가
+  - `CameraTypeRegistry.Register(...)`
+- Basler 기본 동작 위에 연결/이벤트/이미지 처리 추가
+  - `BaslerCameraEx : BaslerCamera`
+- 외부 호출 코드를 정리하고 테스트/서비스용 API를 만들기
+  - `CameraAdapterBase`
 
-## 4) 운영 권장사항
+### 5-2. IO
 
-- `kind` 네이밍은 회사/제품 prefix를 붙이세요.
+- 새 장치 타입 추가
+  - `IODeviceTypeRegistry.Register(...)`
+- 프로토콜/채널 수/카운터 규칙이 다른 장치 구현
+  - `IODeviceBase` 파생 클래스
+
+### 5-3. Motion
+
+- 새 컨트롤러 타입 추가
+  - `MotionControllerTypeRegistry.Register(...)`
+- 공통 모션 API는 유지하고 장비 전용 기능만 노출
+  - `MotionAdapterBase`
+
+## 6. 권장 구조
+
+- 공개 라이브러리 표면은 공통 API 중심으로 유지한다.
+- 장비 내부 파이프라인 수정은 상속으로 처리한다.
+- 현장 전용 기능과 반복 호출은 어댑터로 정리한다.
+- 문자열 `kind`는 충돌을 피하기 위해 회사/프로젝트 접두사를 붙인다.
   - 예: `mycompany.camera.basler-ex`
-- 등록은 앱 시작 시 1회만 수행하세요.
-- 이미 등록된 `kind`를 바꾸려면 `overwrite: true`를 명시하세요.
-- 기존 코드 호환이 필요하면 enum API를 그대로 유지하고, 신규 장비만 `kind` 경로로 추가하세요.
+  - 예: `mycompany.io.custom`
+  - 예: `mycompany.motion.custom`
 
-## 5) BaslerCameraEx 상속 구조 체크
+## 7. 정리
 
-현재 구조에서는 `BaslerCameraEx : BaslerCamera` 확장이 가능하도록 다음 확장 포인트가 열려 있습니다.
+Unified 계열의 확장은 한 가지 방식으로 해결되지 않는다.
 
-- `_camera` 접근: `protected`
-- 오버라이드 가능:
-  - `ApplySettingsAsync()`
-  - `OnBaslerImageGrabbed(...)`
-  - `ConvertGrabResult(...)`
+- 생성 경로 확장: `registry`
+- 내부 동작 확장: `inheritance`
+- 외부 사용 편의 확장: `adapter`
 
-따라서 Basler 기본 구현을 재사용하면서 사용자 로직을 덧붙이는 방식으로 안전하게 확장할 수 있습니다.
+이 세 축을 분리해서 설계하면, 기본 라이브러리를 건드리지 않고도 현장 전용 장비와 기능을 안정적으로 얹을 수 있다.

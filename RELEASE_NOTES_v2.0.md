@@ -578,3 +578,24 @@
   - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`: `BaslerCameraEx` 상속 패턴의 의도/확장 포인트/사용 시나리오 추가
   - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`: Motion `Alarm Reset` 같은 컨트롤러 전용 기능을 어댑터로 노출하는 예제 추가
   - `docs/MOTION_RUNTIME_MANUAL.md`: 런타임 위에 어댑터를 얹는 확장 구조와 `AlarmReset(axisNo)` 패턴 추가
+
+### 2026-03-24 (UnifiedCamera/문서)
+- `RatelSoft.UnifiedCamera`
+  - `CameraAdapterBase` 추가
+  - Basler 카메라 열거 시 emulator 항목을 함께 노출하고, 식별 정보가 비어 있는 placeholder emulator 항목은 제외하도록 정리
+  - `Exposure`, `Gain` 설정/조회 fallback 보강
+  - `BaslerConsoleTestApp` 추가
+    - 첫 번째 물리 Basler 카메라와 첫 번째 emulator 카메라를 열고 1장 그랩하는 콘솔 예제
+    - `RatelSoft` 로그를 콘솔에 출력하도록 구성
+  - `CameraTestApp` 업데이트
+    - `CameraAdapterBase` 기반 구조로 정리
+    - 시작 시 `PYLON_CAMEMU` 설정
+    - Width/Height 읽기/적용 테스트 UX 보강
+- `RatelWPF`
+  - `Test` 메뉴에 `Dual Basler Camera` 창 추가
+  - 물리 Basler 카메라와 emulator 카메라를 동시에 연결/표시하는 테스트 창 추가
+  - Viewer를 `RatelViewer` 기반으로 전환
+- 공개 문서 재정리
+  - `docs/MOTION_RUNTIME_MANUAL.md`를 독립 라이브러리 설명서 형태로 전면 재작성
+  - `docs/UNIFIED_CUSTOM_DEVICE_GUIDE.md`를 registry / inheritance / adapter 기준으로 재구성
+  - `docs/CAMERA_RUNTIME_MANUAL.md` 신규 추가
