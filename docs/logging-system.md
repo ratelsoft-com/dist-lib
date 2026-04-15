@@ -300,6 +300,23 @@ private static void ConfigureNLog()
 </Window>
 ```
 
+### 컬럼 표시 제어
+- `LogViewer`는 컬럼별 의존 속성을 제공한다.
+- 주로 `Level`, `Logger` 컬럼을 켜고 끄는 용도로 사용하면 된다.
+
+```xml
+<logging:LogViewer Grid.Row="5"
+                   Margin="0"
+                   IsLevelColumnVisible="False"
+                   IsLoggerColumnVisible="False"/>
+```
+
+- 사용 가능한 속성
+  - `IsTimeColumnVisible`
+  - `IsLevelColumnVisible`
+  - `IsLoggerColumnVisible`
+  - `IsMessageColumnVisible`
+
 ## LogViewer 기능
 - 실시간 검색: Level/Logger/Message에서 대소문자 구분 없이 검색
 - Clear: 현재 표시된 로그 삭제

@@ -8,6 +8,20 @@
 
 ## 주요 변경사항
 
+### LogViewer 컬럼 표시 의존 속성 추가 (2026-04-15)
+
+- `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
+  - `LogViewer`에 컬럼별 의존 속성 추가
+    - `IsTimeColumnVisible`
+    - `IsLevelColumnVisible`
+    - `IsLoggerColumnVisible`
+    - `IsMessageColumnVisible`
+  - 외부 XAML 설정과 컨텍스트 메뉴 컬럼 토글이 동기화되도록 변경
+- `dist-lib/docs/logging-system.md`
+  - `LogViewer` 컬럼 표시 제어 사용 예시 추가
+  - `IsLevelColumnVisible`, `IsLoggerColumnVisible` 예시와 속성 목록 문서화
+
+
 ### WPF 구성 정리 및 신규 프로젝트
 
 - `RatelLib.WPF` 프로젝트 추가
