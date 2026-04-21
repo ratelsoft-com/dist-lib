@@ -189,9 +189,12 @@ public partial class MainWindow : Window
 
     private void HookViewerEvents()
     {
-        viewer.StartDrawShape += (_, e) => { /* 시작점 처리 */ };
+        viewer.StartDrawShape += (_, e) => { /* 시작점 처리: e.Point는 이미지 좌표 */ };
         viewer.EndDrawShape += (_, e) => { /* 완료 ROI 처리 */ };
         viewer.OnShapeEdited += (_, e) => { /* 편집 반영 */ };
+        viewer.MouseModeChanged += (_, e) => { /* 모드 표시 갱신 */ };
+        viewer.ZoomChanged += (_, e) => { /* 줌 UI 동기화 */ };
+        viewer.ShapeSelectionChanged += (_, e) => { /* 선택 도형 정보 갱신 */ };
     }
 
     private void DrawRect_Click(object sender, RoutedEventArgs e) => viewer.MouseMode = MouseMode.DrawRect;
@@ -269,8 +272,43 @@ private void HookViewerEvents()
         var edited = viewer.GetShapeRect(e.Shape);
         // 편집 후 좌표 반영
     };
+
+    viewer.MatChanged += (_, e) =>
+    {
+        // Mat 바인딩/코드 설정 모두 여기로 들어온다.
+        bool hasImage = e.NewMat != null;
+    };
+
+    viewer.ZoomChanged += (_, e) =>
+    {
+        // 상태바/외부 줌 콤보와 동기화
+        zoomTextBlock.Text = e.NewZoom.ToString();
+    };
+
+    viewer.MouseModeChanged += (_, e) =>
+    {
+        // Draw/Pan/Zoom 상태 표시
+        modeTextBlock.Text = e.NewMode.ToString();
+    };
+
+    viewer.ShapeCollectionChanged += (_, e) =>
+    {
+        // 추가/삭제/전체삭제 후 ROI 목록 갱신
+        overlayCountTextBlock.Text = viewer.Shapes.Count.ToString();
+    };
+
+    viewer.ShapeSelectionChanged += (_, e) =>
+    {
+        // 현재 선택된 ROI 속성 패널 갱신
+        propertyGrid.SelectedObject = e.NewShape;
+    };
 }
 ```
+
+주의:
+- `StartDrawShape`, `EndDrawShape`, `OnShapeEdited`의 `e.Point`는 이미지 좌표 기준이다.
+- `ImageLoaded`는 파일 열기 메뉴 사용 시 발생한다.
+- 코드/바인딩으로 `Mat`이 바뀌는 일반적인 상태 감시는 `MatChanged`를 사용한다.
 
 ### 4.4 도형 추가/조회/삭제
 
@@ -316,3 +354,4 @@ viewer.PointToCenter(new Point(2048, 1024));
 3. 내장 UI 숨김 여부(`ShowMenu`, `ShowToolBar`, `ShowStatusBar`) 결정
 4. 도형 모드 전환 버튼과 `EndDrawShape` 처리 루틴 연결
 5. 오버레이 네이밍 규칙(예: `result_*`, `roi_*`) 정의 후 `RemoveElements` 정리 정책 수립
+6. 외부 툴패널이 있으면 `MatChanged`, `ZoomChanged`, `MouseModeChanged`, `ShapeSelectionChanged`를 연결

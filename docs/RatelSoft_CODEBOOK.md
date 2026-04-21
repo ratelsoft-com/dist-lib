@@ -629,6 +629,8 @@ await cam.DisconnectAsync();
 - `StartDrawShape`, `EndDrawShape`
 - `OnShapeEdited`
 - `ImageMouseDown`, `ImageMouseMove`, `ImageMouseUp`
+- `MatChanged`, `ZoomChanged`, `MouseModeChanged`
+- `ShapeCollectionChanged`, `ShapeSelectionChanged`
 
 주요 Method
 - `MoveToToolBars(ToolBarTray toolBarTray, int startBand = 1)`
@@ -647,6 +649,7 @@ await cam.DisconnectAsync();
 
 ```csharp
 viewer.MouseMode = MouseMode.DrawRect;
+viewer.MouseModeChanged += (_, e) => statusText.Text = e.NewMode.ToString();
 viewer.EndDrawShape += (_, e) =>
 {
     if (e.Shape is Rectangle)
@@ -654,6 +657,10 @@ viewer.EndDrawShape += (_, e) =>
         var rect = viewer.GetShapeRect(e.Shape);
         log.Info($"ROI: {rect.X},{rect.Y},{rect.Width},{rect.Height}");
     }
+};
+viewer.ShapeSelectionChanged += (_, e) =>
+{
+    propertyGrid.SelectedObject = e.NewShape;
 };
 ```
 

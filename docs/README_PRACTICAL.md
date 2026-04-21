@@ -247,6 +247,16 @@ viewer.EndDrawShape += (_, e) =>
         AppLog.Log.Info($"Rect: {rect.X},{rect.Y},{rect.Width},{rect.Height}");
     }
 };
+
+viewer.MouseModeChanged += (_, e) =>
+{
+    modeText.Text = e.NewMode.ToString();
+};
+
+viewer.MatChanged += (_, e) =>
+{
+    loadStateText.Text = e.NewMat == null ? "Empty" : "Loaded";
+};
 ```
 
 툴바를 소비자 UI로 이동:
@@ -269,7 +279,7 @@ viewer.MoveToToolBars(hostToolBarTray, startBand: 0);
 
 ## 10) 문서 운영 기준
 
-- 사용자 프로젝트로 문서를 복사하는 `RatelSoftDocs` 자동 생성은 기본 비활성입니다.
+- 사용자 프로젝트로 `RatelSoftDocs`를 자동 생성/복사하지 않습니다.
 - 공식 문서 원본은 `dist-lib/docs` 단일 경로로 관리합니다.
 
 ## 11) 검증 명령

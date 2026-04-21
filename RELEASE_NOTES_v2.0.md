@@ -135,10 +135,10 @@
   - `RatelViewer.Mat` setter가 백그라운드 스레드에서 호출되더라도 내부적으로 UI `Dispatcher`를 통해 `MatProperty`를 갱신하도록 변경.
   - `viewer.Mat = ...` 직접 할당 및 바인딩 갱신 시 발생할 수 있는 WPF 스레드 접근 예외를 완화.
 
-### 문서 단일화 및 소비자 프로젝트 문서 복사 기본 비활성 (2026-03-06)
+### 문서 단일화 및 소비자 프로젝트 문서 복사 제거 (2026-03-06)
 
 - 문서 운영 기준을 `dist-lib/docs` 단일 원본으로 정리.
-- `RatelSoft.Common`의 buildTransitive 문서 복사 기본값을 `false`로 변경:
+- `RatelSoft.Common`의 buildTransitive 문서 복사 타겟 제거:
   - `RatelSoft.Common/src/RatelSoft.Common/RatelSoft.Common.targets`
 - `RatelSoft.Common` NuGet 패키지에서 문서 파일 자동 포함 제거:
   - `RatelSoft.Common/src/RatelSoft.Common/RatelSoft.Common.csproj`
@@ -146,7 +146,7 @@
   - `..\..\docs\*.md` pack 제거
 - 사용자 문서 반영:
   - `RatelLib/README.md`의 실전 체크리스트 문구를 새 정책에 맞게 수정
-  - `docs/README_PRACTICAL.md`의 `RatelSoftDocs` 자동 생성 안내를 정책 설명으로 교체
+  - `docs/README_PRACTICAL.md`의 `RatelSoftDocs` 안내를 `dist-lib/docs` 단일 원본 정책으로 교체
 - 패키지 버전 갱신:
   - `RatelSoft.*` 핵심 패키지 버전을 `2.26.0306.1`로 업데이트
 

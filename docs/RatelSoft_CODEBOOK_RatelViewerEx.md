@@ -110,6 +110,11 @@ viewer.DefectDoubleClicked += (_, e) =>
     var item = e.Item;
     MessageBox.Show($"Open defect detail: {item.Id}");
 };
+
+viewer.DefectSelectionChanged += (_, e) =>
+{
+    propertyGrid.SelectedObject = e.NewItem;
+};
 ```
 
 현재 선택된 defect:
@@ -122,6 +127,20 @@ ID로 선택:
 
 ```csharp
 viewer.SelectDefect("D-002");
+```
+
+defect 상태 이벤트:
+
+```csharp
+viewer.DefectCollectionChanged += (_, e) =>
+{
+    defectCountText.Text = e.Items.Count.ToString();
+};
+
+viewer.DefectSelectionChanged += (_, e) =>
+{
+    statusText.Text = e.NewItem?.Id ?? "No defect";
+};
 ```
 
 ## 6) 선택된 Defect 스타일 설정

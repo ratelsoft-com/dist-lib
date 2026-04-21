@@ -132,13 +132,8 @@ var defectGroups = MuraEx.InspectEx<T>(
 
 ## 9) 자동 복사 문서 폴더 처리
 
-`RatelSoft.Common`의 buildTransitive target으로 소비 프로젝트에 `RatelSoftDocs`가 생성될 수 있음.
-
-`.gitignore` 권장:
-
-```gitignore
-EsViewer/RatelSoftDocs/
-```
+- 소비자 프로젝트에 `RatelSoftDocs`를 자동 생성/복사하지 않습니다.
+- 공식 문서 원본은 `dist-lib/docs` 단일 경로입니다.
 
 ## 10) Quick Verification Commands
 
