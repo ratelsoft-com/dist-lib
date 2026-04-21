@@ -8,6 +8,12 @@
 
 ## 주요 변경사항
 
+### 패키지 버전 정렬 기본값 강화 및 HSMS 통합 (2026-04-21)
+
+- 패키지 업데이트 기본 정책을 "전체 `RatelSoft.*` 패키지 버전 정렬"로 정리.
+- 통합 패키징 스크립트(`RatelLib/nugetpack.py`) 카탈로그에 `RatelSoft.HSMS` 추가.
+- 통합 패키징 안내 문서(`RatelLib/README.md`)에 전체 패키지 버전 정렬 기본값 설명 추가.
+
 ### LogViewer 컬럼 표시 의존 속성 추가 (2026-04-15)
 
 - `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
