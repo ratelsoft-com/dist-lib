@@ -6,6 +6,7 @@ Ratel Library는 산업용 검사 및 제어 장비 개발을 위한 통합 라�
 
 관련 가이드:
 - Unified 사용자 디바이스 확장 가이드: [`UNIFIED_CUSTOM_DEVICE_GUIDE.md`](./UNIFIED_CUSTOM_DEVICE_GUIDE.md)
+- UnifiedCamera camera/board 확장 가이드: [`UNIFIED_CAMERA_BOARD_EXTENSION_GUIDE.md`](./UNIFIED_CAMERA_BOARD_EXTENSION_GUIDE.md)
 
 ### 주요 특징
 
