@@ -29,19 +29,20 @@
 
 ## 2. 벤더 DLL 배치 정책
 
-`UnifiedCamera`는 Basler/MVS 같은 벤더 managed DLL을 라이브러리가 임의로 출력 폴더에 복사하는 구조를 기본 정책으로 두지 않는다.
+`UnifiedCamera`의 벤더 DLL 정책은 벤더별로 다르다.
 
 원칙:
 
 - 라이브러리 프로젝트는 컴파일을 위해 벤더 DLL을 참조할 수 있다.
 - 실제 실행 파일 옆에 어떤 DLL을 둘지는 사용자 프로젝트가 결정한다.
-- 사용자는 자신이 준비한 `Basler.Pylon.dll`, `MvCameraControl.Net.dll` 경로를 명시해야 한다.
+- Basler/MVS는 사용자가 자신이 준비한 `Basler.Pylon.dll`, `MvCameraControl.Net.dll` 경로를 명시해야 한다.
+- Matrox는 패키지 내부 `buildTransitive\vendor\matrox\...` 경로에 기본 managed DLL이 함께 포함되며, 필요하면 사용자 경로로 override할 수 있다.
 
 중요한 점:
 
 - 단순히 앱 폴더 아래에 `dll` 폴더를 하나 만드는 것만으로는 충분하지 않을 수 있다.
 - 빌드가 어떤 파일을 출력 폴더로 복사할지 알기 위해서는 경로를 명시해야 한다.
-- 이 목적을 위해 `BaslerPylonManagedFile`, `MvsManagedFile` 속성이 제공된다.
+- 이 목적을 위해 `BaslerPylonManagedFile`, `MvsManagedFile`, `MatroxMilManagedFile`, `MatroxMilManagedFolder` 속성이 제공된다.
 
 ### 2-1. 가장 권장하는 방식
 
@@ -52,6 +53,7 @@
   <PropertyGroup>
     <BaslerPylonManagedFile>$(MSBuildThisFileDirectory)vendor\basler\Basler.Pylon.dll</BaslerPylonManagedFile>
     <MvsManagedFile>$(MSBuildThisFileDirectory)vendor\mvs\MvCameraControl.Net.dll</MvsManagedFile>
+    <MatroxMilManagedFile>$(MSBuildThisFileDirectory)vendor\matrox\10.70\Matrox.MatroxImagingLibrary.dll</MatroxMilManagedFile>
   </PropertyGroup>
 </Project>
 ```
@@ -62,7 +64,30 @@
 - 패키지 소비 경로에서는 해당 DLL이 출력 폴더로 복사된다.
 - 벤더 SDK 설치 경로와 무관하게, 프로젝트가 함께 배포할 DLL을 고정할 수 있다.
 
-### 2-2. 직접 앱 프로젝트에 참조 추가하는 방식
+Matrox만 따로 보면 다음 규칙으로 동작한다.
+
+- `MatroxMilManagedFile`이 비어 있지 않고 파일이 존재하면 그 경로를 우선 사용한다.
+- `MatroxMilManagedFile`이 비어 있으면 패키지의 `buildTransitive\vendor\matrox\$(MatroxMilManagedFolder)\Matrox.MatroxImagingLibrary.dll`을 기본값으로 사용한다.
+- `MatroxMilManagedFolder` 기본값은 현재 `10.70`이다.
+
+### 2-2. Matrox 패키지 기본 DLL을 그대로 쓰는 방식
+
+`UnifiedCamera` NuGet 패키지를 `PackageReference`로 소비하면, Matrox managed DLL은 패키지 내부 fallback을 바로 사용할 수 있다.
+
+```xml
+<Project>
+  <PropertyGroup>
+    <MatroxMilManagedFolder>10.70</MatroxMilManagedFolder>
+  </PropertyGroup>
+</Project>
+```
+
+이 경우 별도 `MatroxMilManagedFile`를 적지 않아도, 패키지에 포함된 `vendor\matrox\10.70\Matrox.MatroxImagingLibrary.dll`이 사용된다.
+
+단, 실제 장비 구동에는 managed DLL만으로 충분하지 않을 수 있다.
+Matrox MIL 런타임과 보드 드라이버, 관련 native DLL은 장비 PC에 정상 설치되어 있어야 한다.
+
+### 2-3. 직접 앱 프로젝트에 참조 추가하는 방식
 
 소스 프로젝트를 직접 참조하는 구조라면, 최상위 앱 프로젝트에 명시적으로 참조를 넣는 편이 가장 분명하다.
 
@@ -77,7 +102,7 @@
 
 `Private=true`는 해당 DLL을 실행 폴더로 복사한다는 뜻이다.
 
-### 2-3. 실제 예: `RatelWPF`처럼 프로젝트 내부 `CameraAssembly` 폴더를 쓰는 방식
+### 2-4. 실제 예: `RatelWPF`처럼 프로젝트 내부 `CameraAssembly` 폴더를 쓰는 방식
 
 예를 들어 앱 프로젝트가 아래처럼 DLL을 직접 보관한다고 가정한다.
 
@@ -116,7 +141,7 @@ RatelWPF/
 
 이 방식은 설치 경로에 의존하지 않기 때문에 팀 내 테스트 환경을 맞추기 쉽다.
 
-### 2-4. 설치 경로를 직접 사용하는 예
+### 2-5. 설치 경로를 직접 사용하는 예
 
 ```xml
 <Project>
@@ -227,6 +252,11 @@ await camera.DisconnectAsync();
 - `CameraSelector.FriendlyName("Basler Emulation (0815-0000)")`
 - `CameraSelector.FullName("Emulation (0815-0000)")`
 - `CameraSelector.UserDefinedName("CAM1")`
+
+주의:
+
+- Basler는 `FirstPhysical`, `FirstEmulator` 구분이 의미 있다.
+- Matrox는 현재 emulator 개념이 없고 단일 descriptor 기반이라 `Default`, `First`, `DisplayName`, `FriendlyName`, `FullName`, `UserDefinedName` 중심으로 쓰는 편이 맞다.
 
 ### 4-3. 이름 없이 첫 번째 카메라 연결
 
@@ -396,6 +426,9 @@ await camera.SetExposureAsync(100);
 var actualExposure = await camera.GetExposureAsync();
 Console.WriteLine($"Applied exposure={actualExposure}");
 ```
+
+Matrox 구현은 현재 `ExposureTime` 계열 제어가 추가되어 있어 노출 읽기/쓰기가 가능하다.
+내부적으로는 `M_EXPOSURE_TIME`을 먼저 시도하고, 실패하면 `ExposureTime` feature fallback을 사용한다.
 
 ## 10. 트리거 제어
 
@@ -567,9 +600,109 @@ public sealed class BaslerCameraAdapter : CameraAdapterBase
 
 이 패턴은 공통 카메라 API를 유지하면서 외부 호출 코드를 정리하는 데 적합하다.
 
-## 13. Basler 실사용 예
+현재 소스에는 `MatroxCameraAdapter`도 포함되어 있다.
+Matrox처럼 연결 전에 `DcfPath` 같은 전용 속성을 채워야 하는 장비는, 이런 전용 adapter로 준비 단계를 묶는 편이 안전하다.
 
-### 13-1. 첫 번째 물리 카메라와 첫 번째 에뮬레이터 열기
+## 13. Matrox 실사용 예
+
+현재 Matrox 구현은 `CameraType.Matrox`로 생성 가능한 실구현이다.
+다만 Camera Link grabber 특성상, 연결 전에 최소한 `DcfPath`를 지정해야 한다.
+
+### 13-1. 기본 연결
+
+```csharp
+using RatelSoft.Utils.UnifiedCamera;
+
+using var camera = (MatroxCamera)CameraFactory.CreateCamera(CameraType.Matrox);
+camera.DcfPath = @"C:\Config\Matrox\MyCamera.dcf";
+
+var ok = await camera.ConnectAsync();
+if (!ok)
+{
+    throw new InvalidOperationException("Matrox connect failed.");
+}
+```
+
+현재 기본 descriptor 이름은 `Board0:Channel0`이다.
+`DcfPath`가 없거나 파일이 없으면 연결은 실패한다.
+
+### 13-2. 보드/채널 메타데이터와 descriptor
+
+```csharp
+using var camera = (MatroxCamera)CameraFactory.CreateCamera(CameraType.Matrox);
+camera.DcfPath = @"C:\Config\Matrox\LineCamera.dcf";
+camera.SystemDescriptor = "M_SYSTEM_SOLIOS";
+camera.BoardName = "Board0";
+camera.ChannelName = "Channel0";
+
+var descriptors = await camera.GetAvailableCameraDescriptorsAsync();
+foreach (var item in descriptors)
+{
+    Console.WriteLine($"Display={item.DisplayName}");
+    Console.WriteLine($"Friendly={item.FriendlyName}");
+    Console.WriteLine($"Full={item.FullName}");
+    Console.WriteLine($"UserDefined={item.UserDefinedName}");
+}
+```
+
+현재 Matrox descriptor는 다음 기준으로 만들어진다.
+
+- `DisplayName`, `CanonicalName`: `Board0:Channel0`
+- `FriendlyName`: `BoardName:ChannelName`
+- `FullName`: `SystemDescriptor BoardName ChannelName DCF=<파일명>`
+- `UserDefinedName`, `DeviceSerialNumber`: `DCF` 파일명 기반
+
+즉, 화면에는 `DisplayName`을 보여주고, 내부 연결에는 `FriendlyName` 또는 `FullName` selector를 쓰는 구성이 가능하다.
+
+### 13-3. selector 기반 연결
+
+```csharp
+using var camera = (MatroxCamera)CameraFactory.CreateCamera(CameraType.Matrox);
+camera.DcfPath = @"C:\Config\Matrox\LineCamera.dcf";
+
+await camera.ConnectAsync(CameraSelector.First());
+await camera.DisconnectAsync();
+
+await camera.ConnectAsync(CameraSelector.DisplayName("Board0:Channel0"));
+await camera.DisconnectAsync();
+
+await camera.ConnectAsync(CameraSelector.FullName("M_SYSTEM_SOLIOS Board0 Channel0 DCF=LineCamera.dcf"));
+```
+
+현재 Matrox selector는 아래 모드를 지원한다.
+
+- `CameraSelector.Default()`
+- `CameraSelector.First()`
+- `CameraSelector.DisplayName(...)`
+- `CameraSelector.FriendlyName(...)`
+- `CameraSelector.FullName(...)`
+- `CameraSelector.UserDefinedName(...)`
+
+`FirstPhysical()`, `FirstEmulator()`는 Matrox 구현과는 맞지 않으므로 사용하지 않는 편이 낫다.
+
+### 13-4. 노출 적용과 1장 그랩
+
+```csharp
+using var camera = (MatroxCamera)CameraFactory.CreateCamera(CameraType.Matrox);
+camera.DcfPath = @"C:\Config\Matrox\LineCamera.dcf";
+
+await camera.ConnectAsync();
+
+await camera.SetExposureAsync(100);
+var applied = await camera.GetExposureAsync();
+Console.WriteLine($"Exposure={applied}");
+
+using var result = await camera.GrabOneAsync(5000);
+Console.WriteLine($"Grab={result.Success}, Size={result.Width}x{result.Height}");
+```
+
+현재 Matrox 구현은 1장 그랩과 노출 제어는 반영되어 있다.
+반면 트리거, reset, gain, width/height 변경, 연속 그랩 파이프라인은 장비별 완성 구현으로 보기 어렵다.
+따라서 Matrox를 붙이는 앱은 우선 `ConnectAsync` + `GrabOneAsync` + `Exposure` 중심으로 검증하는 편이 안전하다.
+
+## 14. Basler 실사용 예
+
+### 14-1. 첫 번째 물리 카메라와 첫 번째 에뮬레이터 열기
 
 Basler emulator를 테스트에 포함하려면 프로세스 시작 시 `PYLON_CAMEMU`를 설정하는 것이 일반적이다.
 
@@ -615,7 +748,7 @@ Basler emulator canonical display name 정책:
 - `Basler Emulation (0815-0000)`
 - `Emulation (0815-0000)`
 
-### 13-2. 노출 100 적용 후 한 장 그랩
+### 14-2. 노출 100 적용 후 한 장 그랩
 
 ```csharp
 Environment.SetEnvironmentVariable("PYLON_CAMEMU", "1", EnvironmentVariableTarget.Process);
@@ -633,7 +766,7 @@ Console.WriteLine($"Grab={result.Success}, Size={result.Width}x{result.Height}")
 
 장비가 스텝 제약을 가지면 읽어온 값이 `100`이 아닌 인접 값일 수 있다.
 
-### 13-3. selector와 raw 목록을 함께 쓰는 예
+### 14-3. selector와 raw 목록을 함께 쓰는 예
 
 실제 앱에서는 장치 목록을 화면에 보여주되, 연결은 selector로 수행하는 구성이 가장 안정적이다.
 
@@ -661,9 +794,9 @@ Console.WriteLine($"physical={physicalImage.Width}x{physicalImage.Height}");
 Console.WriteLine($"emulator={emulatorImage.Width}x{emulatorImage.Height}");
 ```
 
-## 14. 사용자 카메라 등록 패턴
+## 15. 사용자 카메라 등록 패턴
 
-### 14-1. 새 kind 등록
+### 15-1. 새 kind 등록
 
 ```csharp
 using RatelSoft.Utils.UnifiedCamera;
@@ -675,13 +808,13 @@ CameraTypeRegistry.Register(
     overwrite: true);
 ```
 
-### 14-2. 등록한 kind로 생성
+### 15-2. 등록한 kind로 생성
 
 ```csharp
 using var camera = CameraFactory.CreateCamera("mycompany.camera.basler-ex");
 ```
 
-## 15. 상속과 어댑터의 역할 차이
+## 16. 상속과 어댑터의 역할 차이
 
 카메라 쪽에는 확장 방식이 두 가지가 있다.
 
@@ -698,16 +831,17 @@ using var camera = CameraFactory.CreateCamera("mycompany.camera.basler-ex");
 - 내부 동작 확장: 상속
 - 외부 사용 편의 확장: 어댑터
 
-## 16. 권장 규칙
+## 17. 권장 규칙
 
 - 공통 기능은 `ICamera` / `CameraAdapterBase`로 사용한다.
 - 장비 내부 파이프라인을 바꿀 때만 상속을 사용한다.
 - 요청값을 설정한 뒤 실제 장비값을 다시 읽어 검증하는 습관을 갖는다.
 - 라인/에어리 구분은 강제 enum보다 현재 `CameraSettings` 조합을 먼저 기준으로 해석한다.
+- Matrox는 연결 전에 `DcfPath`를 반드시 검증하고, selector는 descriptor 기반 문자열로 맞춘다.
 - `GrabResult.Image`는 `Mat`이므로 수명 관리를 명확히 한다.
 - 이벤트 핸들러에서 받은 이미지를 오래 들고 있을 경우 `Clone()` 후 별도로 관리한다.
 
-## 17. 정리
+## 18. 정리
 
 `UnifiedCamera`의 기준 구조는 다음과 같다.
 
