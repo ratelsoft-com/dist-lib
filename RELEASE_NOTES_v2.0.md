@@ -8,6 +8,13 @@
 
 ## 주요 변경사항
 
+### UnifiedMotion 이동 완료 대기 안정화 (2026-05-29)
+
+- `RatelSoft.UnifiedMotion`
+  - `MoveAbsAsync`, `MoveIncAsync`에서 이동 명령 직전/직후 기존 완료 상태(`Vel0`, `InPosition`)를 무효화하도록 보완.
+  - 폴링 이전 정지 상태가 남아 있어 `WaitMoveDoneAsync`가 즉시 종료될 수 있는 레이스를 방지.
+  - 0 이동/극소 이동은 다음 상태 갱신에서 완료 상태가 다시 반영되도록 기존 완료 대기 흐름을 유지.
+
 ### 패키지 버전 정렬 기본값 강화 및 HSMS 통합 (2026-04-21)
 
 - 패키지 업데이트 기본 정책을 "전체 `RatelSoft.*` 패키지 버전 정렬"로 정리.
