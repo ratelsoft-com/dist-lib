@@ -8,6 +8,17 @@
 
 ## 주요 변경사항
 
+### LogViewer 메시지 컬럼 폭 및 가로 스크롤 개선 (2026-07-17)
+
+- `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
+  - 소비자 XAML에서 메시지 컬럼 폭을 지정할 수 있도록 `MessageColumnWidth` 의존 속성 추가(기본값 `400`).
+- `RatelSoft.Utils.Wpf/Logging/GridViewColumnHelper.cs`
+  - `VisibleWidth`를 추가해 컬럼 숨김/복원과 외부 폭 설정이 충돌하지 않도록 보완.
+- `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml`
+  - Message 컬럼 폭을 `MessageColumnWidth`와 연결해 긴 로그에서 가로 스크롤을 사용할 수 있도록 개선.
+- `dist-lib/docs/logging-system.md`
+  - 메시지 컬럼 폭과 가로 스크롤 사용 예시를 추가.
+
 ### UnifiedMotion 이동 완료 대기 안정화 (2026-05-29)
 
 - `RatelSoft.UnifiedMotion`

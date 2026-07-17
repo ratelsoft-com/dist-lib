@@ -88,6 +88,7 @@ log.Info("startup", "module started");
 - 코드 기반 구성: `ConfigureNLog()`에서 `RatelLogViewer` target 등록
 - 파일 기반 구성: `nlog.config` 사용 시 `<extensions><add assembly="RatelSoft.Utils.Wpf" /></extensions>` 포함
 - Caller 기반 분리 로그를 쓰면 `${event-properties:item=Caller}`를 레이아웃/필터에 같이 쓴다.
+- 긴 로그 메시지를 가로로 확인해야 하면 `LogViewer.MessageColumnWidth`를 유한값으로 지정한다. 외부 `ScrollViewer` 안에서는 `LogViewer`가 viewport 폭으로 제한되는지도 확인한다.
 
 ### 7.1.2 Global Using 권장 템플릿
 ```csharp

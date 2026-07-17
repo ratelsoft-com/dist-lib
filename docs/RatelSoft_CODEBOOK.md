@@ -127,6 +127,15 @@ WPF LogViewer Target 타입 위치
 - Namespace: `RatelSoft.Utils.Wpf.Logging`
 - File: `RatelSoft.Utils.Wpf/Logging/NLogLogViewerTarget.cs`
 
+WPF LogViewer 긴 메시지 표시
+- `MessageColumnWidth` 의존 속성으로 Message 컬럼 폭을 지정한다(기본값 `400`).
+- 내부 가로 스크롤은 컬럼 전체 폭이 viewport보다 클 때 자동으로 표시된다.
+
+```xml
+<logging:LogViewer IsLoggerColumnVisible="False"
+                   MessageColumnWidth="1600" />
+```
+
 복붙 예제
 ```csharp
 using RatelSoft.Common;

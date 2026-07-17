@@ -308,7 +308,8 @@ private static void ConfigureNLog()
 <logging:LogViewer Grid.Row="5"
                    Margin="0"
                    IsLevelColumnVisible="False"
-                   IsLoggerColumnVisible="False"/>
+                   IsLoggerColumnVisible="False"
+                   MessageColumnWidth="1600"/>
 ```
 
 - 사용 가능한 속성
@@ -316,6 +317,19 @@ private static void ConfigureNLog()
   - `IsLevelColumnVisible`
   - `IsLoggerColumnVisible`
   - `IsMessageColumnVisible`
+  - `MessageColumnWidth` (기본값: `400`)
+
+### 메시지 컬럼 폭과 가로 스크롤
+- `LogViewer`의 내부 가로 스크롤은 `Auto`로 동작한다.
+- 긴 메시지를 끝까지 가로로 탐색하려면 `MessageColumnWidth`를 화면보다 충분히 큰 유한값으로 지정한다.
+- 컬럼 전체 폭이 `LogViewer`의 viewport보다 커지면 내부 가로 스크롤이 표시된다.
+- `Width="Auto"`처럼 가장 긴 메시지에 맞춘 자동 폭은 매우 긴 로그 한 건이 전체 레이아웃을 과도하게 확장할 수 있으므로 권장하지 않는다.
+- `LogViewer`가 외부 `ScrollViewer` 안에 있으면 외부 컨테이너가 자식에게 무한 폭을 제공하지 않도록 viewport 폭 또는 `MaxWidth`로 제한한다.
+
+```xml
+<logging:LogViewer IsLoggerColumnVisible="False"
+                   MessageColumnWidth="1600"/>
+```
 
 ## LogViewer 기능
 - 실시간 검색: Level/Logger/Message에서 대소문자 구분 없이 검색
