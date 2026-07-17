@@ -8,6 +8,14 @@
 
 ## 주요 변경사항
 
+### RatelViewer 컬러 픽셀 상태 표시 지원 (2026-07-17)
+
+- `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml.cs`
+  - 상태 표시줄의 마우스 위치 픽셀 값을 `CV_8UC3`에서는 `R/G/B`, `CV_8UC4`에서는 `R/G/B/A` 채널별로 표시하도록 개선.
+  - grayscale과 16-bit grayscale의 기존 단일 레벨 표시 및 컬러 클릭 시 팔레트 기준 레벨 계산 동작은 유지.
+- `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml`
+  - 컬러 채널 문자열이 잘리지 않도록 픽셀 상태 영역의 고정 폭을 제거하고 최소 폭만 유지.
+
 ### LogViewer 메시지 컬럼 폭 및 가로 스크롤 개선 (2026-07-17)
 
 - `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
