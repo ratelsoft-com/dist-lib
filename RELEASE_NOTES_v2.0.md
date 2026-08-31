@@ -8,6 +8,48 @@
 
 ## 주요 변경사항
 
+### nugetpack.py 난독화 단계 복원 (2026-08-31)
+
+- `RatelLib/nugetpack.py`
+  - 2026-02-12 split-repo 재작성(`4d892ad`) 때 빠졌던 Obfuscar 난독화 단계를 복원. 이후 배포된 `RatelSoft.Lib`/`RatelSoft.Vision` 패키지(2.26.0717.x 등)는 난독화 없이 나갔음.
+  - 파이프라인: 버전 갱신 → build → **obfuscate** → pack(`--no-build`) → push → git commit/push. `Project.obfuscate=True`인 `lib`, `vision`만 대상.
+  - Obfuscar 설정은 `bin/Obfuscated/<tfm>/obfuscar.xml`로 매 실행 시 생성(절대 경로, 설치된 .NET 런타임/NuGet 캐시 의존 경로 자동 탐색). 실행 전 이전 결과물을 지워서 실패 시 옛 DLL이 복사되는 일을 방지.
+  - `--no-obfuscate` 옵션 추가(의도적으로 난독화 없이 배포할 때만 사용). Obfuscar 미설치 시 설치 명령 안내 후 중단.
+
+### LogViewer 재구독/Caller 필터 보완 (2026-08-31)
+
+- `RatelSoft.Utils.Wpf/Logging/LogViewer.xaml.cs`
+  - 탭 전환 등으로 `Unloaded`→`Loaded`가 반복될 때 로그가 멈추던 문제 수정. `Unloaded`에서는 피드 구독만 해제하고 `Loaded`에서 `NLogLogViewerTarget.AttachViewModel`로 재구독.
+- `RatelSoft.Utils.Wpf/Logging/NLogLogViewerTarget.cs`
+  - `AttachViewModel` 추가: 재구독 시 전역 버퍼 스냅샷으로 끊겨 있던 동안의 로그를 복원(중복 방지를 위해 전체 교체).
+- `RatelSoft.Utils.Wpf/Logging/LogViewerViewModel.cs`
+  - `FilterCaller` 변경 시 이미 수집된 항목을 재필터(`RefilterCaller`). XAML에서 `Caller`가 생성자 이후에 설정돼 타 채널 리플레이 항목이 남던 문제 해결.
+  - `Resync(IEnumerable<LogItem>)` 추가.
+
+### UnifiedIO CONTEC 디바이스 및 채널 매핑 데코레이터 추가 (2026-08-31)
+
+- `RatelSoft.UnifiedIO/src/UnifiedIO/ContecIODevice.cs`, `CdioCs.cs`
+  - CONTEC 디지털 IO(CDIO API, `cdio.dll`; DIO-0808LY-USB 등) 지원 `ContecIODevice` 추가. `IODeviceType.Contec` / kind `"contec"`으로 팩토리 등록.
+  - CDIO 래퍼의 interrupt callback이 unsafe 포인터를 사용하므로 `AllowUnsafeBlocks=true`.
+- `RatelSoft.UnifiedIO/src/UnifiedIO/ChannelMappedIODevice.cs`
+  - 논리 채널을 물리 채널로 재배열하는 `ChannelMappedIODevice` 데코레이터 추가(`IIODevice`, `IIODeviceKindProvider`).
+- `RatelSoft.UnifiedIO/src/UnifiedIO/Simulation/RemoteEmulatedIODevice.cs`
+  - `SimulateInputAsync` 오버라이드 추가: 자기 입력 주소의 서버 bit를 직접 써서 수동 시험용 입력을 강제.
+- `RatelSoft.UnifiedIO/tests/UnifiedIO.Tests/ChannelMappedIODeviceTests.cs`
+  - 채널 매핑 테스트 추가.
+
+### Library 루트 워크스페이스 도구 추가 (2026-08-31)
+
+- `RatelLib/workspace/root/`
+  - `Library` 루트에 설치되는 도구 원본 추가: `ratel.cmd`/`ratel.ps1`(루트 CLI), `Library.code-workspace`, `AGENTS.md`, `CLAUDE.md`.
+  - 루트 CLI 명령: `repos`, `status`, `fetch`, `pull`, `pack`(→`nugetpack.py`), `upload`(→`upload_ratelsoft_packages.py`), `sync`, `check`, `code`.
+- `RatelLib/scripts/install-workspace-tools.ps1`
+  - 원본을 루트로 설치/검사(`-Check`)/제거(`-Uninstall`)하는 스크립트 추가.
+- `RatelLib/scripts/bootstrap-split-repos.ps1`
+  - `-InstallWorkspaceTools` 옵션 추가. 새 PC 복원 절차가 `RatelLib` 클론 + bootstrap 한 번으로 완결되도록 정리.
+- `RatelLib/README.md`, `RatelLib/AGENTS.md`
+  - 루트 도구 사용법과 "루트 설치본은 직접 수정하지 않는다" 규칙 문서화.
+
 ### RatelViewer 컬러 픽셀 상태 표시 지원 (2026-07-17)
 
 - `RatelSoft.Vision.Wpf/WPF/RatelViewer.xaml.cs`
