@@ -8,6 +8,11 @@
 
 ## 주요 변경사항
 
+### MessagePack 3.1.8 업데이트 (2026-08-31)
+
+- `RatelSoft.Types`, `RatelSoft.Utils.OpenCvAdapter`: `MessagePack` 3.1.4 → 3.1.8. 3.1.4의 알려진 취약성 경고(NU1902 ×9, NU1903 ×3) 제거.
+- `RatelSoft.Utils.TestLibApp.Template` 템플릿 내용의 `MessagePack` 참조도 2.5.192 → 3.1.8로 정렬.
+
 ### nugetpack.py 난독화 단계 복원 (2026-08-31)
 
 - `RatelLib/nugetpack.py`
