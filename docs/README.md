@@ -5,7 +5,8 @@
 Ratel Library는 산업용 검사 및 제어 장비 개발을 위한 통합 라이브러리입니다. 특히 **Ratel.Vision**은 이미지 기반 품질 검사를 위한 고성능 얼룩(Mura) 검출 알고리즘을 제공합니다.
 
 관련 가이드:
-- Mura 검사 사용자 매뉴얼(검사 원리, 파라미터, 튜닝): [`MURA_USER_MANUAL.md`](./MURA_USER_MANUAL.md)
+- Mura 검사 사용자 매뉴얼(비개발자용. 검사 원리, 화면 설명, 파라미터, 튜닝): [`MURA_USER_MANUAL.md`](./MURA_USER_MANUAL.md)
+- Mura 검사 API 매뉴얼(개발자용): [`MURA_API_MANUAL.md`](./MURA_API_MANUAL.md)
 - Unified 사용자 디바이스 확장 가이드: [`UNIFIED_CUSTOM_DEVICE_GUIDE.md`](./UNIFIED_CUSTOM_DEVICE_GUIDE.md)
 - UnifiedCamera camera/board 확장 가이드: [`UNIFIED_CAMERA_BOARD_EXTENSION_GUIDE.md`](./UNIFIED_CAMERA_BOARD_EXTENSION_GUIDE.md)
 
@@ -45,7 +46,7 @@ Install-Package RatelSoft.Vision
 
 Ratel.Vision은 디스플레이 패널, 반도체, 필름 등 다양한 산업 분야에서 발생하는 **얼룩(Mura)** 결함을 자동으로 검출하는 라이브러리입니다.
 
-> 검사 원리, 파라미터 의미, 튜닝 절차는 [`MURA_USER_MANUAL.md`](./MURA_USER_MANUAL.md)를 기준으로 합니다. 아래 예제 중 `Ratel.*` 네임스페이스와 `RatelLib.InitLib()`는 구 버전 기준이며, 현재 패키지에서는 `RatelSoft.Vision.Mura`, `RatelSoft.Vision.GPU.Cuda.InitGPU()`를 사용합니다.
+> 검사 원리, 파라미터 의미, 튜닝 절차는 [`MURA_USER_MANUAL.md`](./MURA_USER_MANUAL.md), 코드에서의 사용법은 [`MURA_API_MANUAL.md`](./MURA_API_MANUAL.md)를 기준으로 합니다. 아래 예제 중 `Ratel.*` 네임스페이스와 `RatelLib.InitLib()`는 구 버전 기준이며, 현재 패키지에서는 `RatelSoft.Vision.Mura`, `RatelSoft.Vision.GPU.Cuda.InitGPU()`를 사용합니다.
 
 ### 핵심 기능
 
