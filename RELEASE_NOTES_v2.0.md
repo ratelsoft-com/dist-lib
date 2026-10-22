@@ -8,6 +8,12 @@
 
 ## 주요 변경사항
 
+### Mura 검사 사용자 매뉴얼 추가 (2026-10-22)
+
+- `docs/MURA_USER_MANUAL.md` 신규. 사용자 관점의 검사 원리(블록 평균, 중심/주변 비교, 판정, 병합), `MuraConfig`/`SurConfig`/`CompareOption`/Edge 파라미터 레퍼런스, 튜닝 절차와 증상별 조정표, API 사용 예(CPU/GPU/마스크/스크래치)를 담는다. 공개 배포용.
+- `docs/README.md`: 관련 가이드에 링크 추가. 기존 Mura 예제가 구 네임스페이스(`Ratel.*`) 기준임을 명시.
+- 같은 날 `RatelSoft.Vision` 변경(다음 패키지에 반영): 16비트 입력 스케일 1/255 → 1/256(GPU와 통일), `DiffCount` 클램프가 레시피를 수정하지 않도록 변경, `Must*` + Edge 옵션 동시 설정 시 Warn 로그, 그룹 병합을 공간형 사각형 병합으로 통일, `MuraInspectOptions.MaxCountForFastMerge` Obsolete, Obsolete `MergeGroup` 제거.
+
 ### MessagePack 3.1.8 업데이트 (2026-08-31)
 
 - `RatelSoft.Types`, `RatelSoft.Utils.OpenCvAdapter`: `MessagePack` 3.1.4 → 3.1.8. 3.1.4의 알려진 취약성 경고(NU1902 ×9, NU1903 ×3) 제거.
