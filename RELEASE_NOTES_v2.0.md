@@ -8,6 +8,23 @@
 
 ## 주요 변경사항
 
+### LogViewer 레벨별 표시 토글 (2026-11-01, 패키지 2.26.1101.2)
+
+- `RatelSoft.Utils.Wpf` LogViewer
+  - 툴바의 "경고만 표시"를 레벨별 토글 버튼(Trace, Debug, Info, Warn, Error, Fatal)으로 교체. Trace/Debug는 기본으로 숨김. 우클릭 메뉴에도 "표시 레벨" 하위 메뉴 추가.
+  - 레벨 토글과 검색은 화면 필터로만 동작하고, 로그는 레벨과 관계없이 최근 10000건까지 보관(기존 1000건). 다른 레벨만 보다가 돌아와도 로그가 사라지지 않음.
+  - 필터 변경 시 목록을 한 번에 갱신하고, 변경 후에도 자동 스크롤.
+  - **호환성**: `LogViewerViewModel.IsWarnOnly` 제거 → `ShowTrace`/`ShowDebug`/`ShowInfo`/`ShowWarn`/`ShowError`/`ShowFatal`. 리소스 키 `WarnOnlyLabel` 제거 → `LevelFilterLabel`/`LevelFilterMenuLabel`.
+
+### LogViewer 경고만 표시 필터 수정 (2026-11-01, 패키지 2.26.1101.1)
+
+- `RatelSoft.Utils.Wpf` LogViewer: "경고만 표시"를 켜면 Warn만 보이고 Error, Fatal이 숨겨지던 문제 수정.
+
+### 패키징 도구 PowerShell 이전 (2026-11-01)
+
+- 패키징을 `RatelLib/scripts/pack.ps1`(`ratel pack`)로 이전. 정식 배포 규칙(전체 버전 정렬, Lib/Vision 난독화)은 그대로.
+- 라이브러리 수정 테스트용 미리보기 패키지(`ratel pack -Preview`)와 소비자 프로젝트 전환(`-p:RatelUseSource=true`, `-p:RatelUsePreview=true`) 추가. 자세한 내용은 `RatelLib/Docs/PACKAGING_RULES.md`.
+
 ### Mura 검사 매뉴얼 추가: 사용자용/API용 분리 (2026-10-22)
 
 - `docs/MURA_USER_MANUAL.md` 신규(비개발자용). EsViewer 화면 캡처(`docs/images/mura/`)를 기준으로 검사 원리, 화면 구성, 따라하기(영상 열기 → 필터 추가 → ROI → 검사 → 조정 → 레시피 저장), 화면 항목별 의미, 조정 순서와 증상별 조정표, 문제 해결, 용어를 담는다. 연습용 영상 `sample_panel.png`와 레시피 `sample_recipe.json` 포함.

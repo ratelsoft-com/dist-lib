@@ -49,7 +49,7 @@ private static void OnUiLanguageChanged(DependencyObject d, DependencyPropertyCh
 
 ```xml
 <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=local:LogViewer}, Path=Localizer[SearchLabel]}"/>
-<CheckBox Content="{Binding RelativeSource={RelativeSource AncestorType=local:LogViewer}, Path=Localizer[WarnOnlyLabel]}"/>
+<TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=local:LogViewer}, Path=Localizer[LevelFilterLabel]}"/>
 ```
 
 컨텍스트 메뉴처럼 `DataContext`가 분리되는 경우:
