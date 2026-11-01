@@ -24,6 +24,7 @@
 
 - 패키징을 `RatelLib/scripts/pack.ps1`(`ratel pack`)로 이전. 정식 배포 규칙(전체 버전 정렬, Lib/Vision 난독화)은 그대로.
 - 라이브러리 수정 테스트용 미리보기 패키지(`ratel pack -Preview`)와 소비자 프로젝트 전환(`-p:RatelUseSource=true`, `-p:RatelUsePreview=true`) 추가. 자세한 내용은 `RatelLib/Docs/PACKAGING_RULES.md`.
+- 이전 Python 패키징 스크립트(`nugetpack.py`, `upload_ratelsoft_packages.py`, 분리 저장소의 `nugetpack*.py`)와 `ratel upload` 명령 제거.
 
 ### Mura 검사 매뉴얼 추가: 사용자용/API용 분리 (2026-10-22)
 
