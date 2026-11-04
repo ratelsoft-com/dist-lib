@@ -8,6 +8,12 @@
 
 ## 주요 변경사항
 
+### 저장소 주소 변경 반영 (2026-11-04)
+
+- 이전된 저장소 주소를 반영: RatelLib은 `ratelsoft-com/library-ratellib`, RatelSoft.HSMS는 `jjack000/library-hsms`.
+- `scripts/bootstrap-split-repos.ps1`: 없는 저장소를 가리키던 HSMS 클론 주소를 수정. HSMS는 소유자와 브랜치(`master`)를 따로 지정.
+- 루트 지침의 저장소 표, nuspec, readme, `Ratel.HSMS.csproj`의 `RepositoryUrl` 갱신.
+
 ### LogViewer 레벨별 표시 토글 (2026-11-01, 패키지 2.26.1101.2)
 
 - `RatelSoft.Utils.Wpf` LogViewer
